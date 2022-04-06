@@ -20,6 +20,8 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
     pq.PQnfields.argtypes = (c_void_p,)
     pq.PQfname.argtypes = (c_void_p, c_int)
     pq.PQfname.restype = c_char_p
+    pq.PQgetvalue.argtypes = (c_void_p, c_int, c_int)
+    pq.PQgetvalue.restype = c_char_p
     pq.PQclear.argtypes = (c_void_p,)
 
     PGRES_TUPLES_OK = 2
@@ -81,8 +83,12 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
                         pq.PQfname(result, i).decode('utf-8')
                         for i in range(0, num_columns)
                     )
+                    values = tuple(
+                        pq.PQgetvalue(result, 0, i)
+                        for i in range(0, num_columns)
+                    )
 
-                    yield (group_key, columns), result
+                    yield (group_key, columns), values
                 finally:
                     pq.PQclear(result)
 
