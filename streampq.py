@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from functools import partial
-from ctypes import cdll, c_char_p, c_void_p
+from ctypes import cdll, c_char_p, c_void_p, c_int
 from ctypes.util import find_library
 from itertools import groupby
 
@@ -17,6 +17,9 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
     pq.PQgetResult.argtypes = (c_void_p,)
     pq.PQgetResult.restype = c_void_p
     pq.PQresultStatus.argtypes = (c_void_p,)
+    pq.PQnfields.argtypes = (c_void_p,)
+    pq.PQfname.argtypes = (c_void_p, c_int)
+    pq.PQfname.restype = c_char_p
     pq.PQclear.argtypes = (c_void_p,)
 
     PGRES_TUPLES_OK = 2
@@ -66,23 +69,31 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
 
                 try:
                     status = pq.PQresultStatus(result)
-                    if status != PGRES_SINGLE_TUPLE:
+                    if status == PGRES_TUPLES_OK:
                         group_key = object()
                         continue
 
-                    yield group_key, result
+                    if status != PGRES_SINGLE_TUPLE:
+                        continue
+
+                    columns = tuple(
+                        pq.PQfname(result, i).decode('utf-8')
+                        for i in range(0, pq.PQnfields(result))
+                    )
+
+                    yield (group_key, columns), result
                 finally:
                     pq.PQclear(result)
 
         def get_columns(grouped_results):
-            for _, rows in grouped_results:
-                yield None, rows
+            for (_, columns), rows in grouped_results:
+                yield columns, (row[1] for row in rows)
 
         results = get_results()
-        grouped_results = groupby(results, key=lambda key_value: key_value[0])
+        grouped_results = groupby(results, key=lambda key_columns_row: key_columns_row[0])
         with_columns = get_columns(grouped_results)
 
-        yield with_columns
+        return with_columns
 
     with get_conn() as conn:
         yield partial(query, conn)

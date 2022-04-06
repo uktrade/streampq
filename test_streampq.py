@@ -8,10 +8,14 @@ def test_streampy():
         ('user', 'postgres'),
         ('password', 'password'),
     )
-    count = 0
-    with streampq_connect(params) as query:
-        for cols, rows in query('SELECT 1; SELECT 2'):
-            for row in rows:
-                count += 1
+    sql = 'SELECT 1 as "first"; SELECT 1,2'
+    with streampq_connect(params) as query: 
+        results = [
+            (cols, list(rows))
+            for cols, rows in query(sql)
+        ]
 
-    assert count == 2
+    assert results[0][0] == ('first',)
+    assert len(results[0][1]) == 1
+    assert results[1][0] == ('?column?', '?column?')
+    assert len(results[1][1]) == 1
