@@ -48,12 +48,10 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
         if not ok:
             raise Exception()
 
-        # So we can use groupby to separate rows for different statements
-        # in multi-statment queries
-        group_key = object()
-
         def get_results():
-            nonlocal group_key
+            # So we can use groupby to separate rows for different statements
+            # in multi-statment queries
+            group_key = object()
 
             while True:
                 result = pq.PQgetResult(conn)
