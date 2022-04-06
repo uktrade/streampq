@@ -23,6 +23,11 @@ jobs:
         type: string
     docker:
       - image: cimg/python:<< parameters.python-version >>
+      - image: cimg/postgres:14.2
+        environment:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
     steps:
       - checkout
       - attach_workspace:
