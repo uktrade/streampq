@@ -24,8 +24,9 @@ sql = '...'
 
 with \
         streampq_connect(connection_params) as query, \
-        query(sql) as (columns, rows):
+        query(sql) as results:
 
-    for row in rows:
-        pass
+    for (columns, rows) in results:
+        for row in rows:
+            pass
 ```
