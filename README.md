@@ -22,9 +22,10 @@ from streampq import streampq_connect
 connection_params = '...'
 sql = '...'
 
-with streampq_connect(connection_params) as query:
-    for (columns, rows) in query(sql):
-        for row in rows:
-            pass
+with \
+        streampq_connect(connection_params) as query, \
+        query(sql) as (columns, rows):
 
+    for row in rows:
+        pass
 ```
