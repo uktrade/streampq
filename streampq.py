@@ -30,7 +30,7 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
     keywords = as_null_terminated_array(tuple(param[0] for param in params))
     values = as_null_terminated_array(tuple(param[1] for param in params))
 
-    conn = c_void_p(pq.PQconnectdbParams(keywords, values, 0))
+    conn = pq.PQconnectdbParams(keywords, values, 0)
     if not conn:
         raise Exception()
 
