@@ -9,6 +9,9 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
     pq.PQconnectdbParams.restype = c_void_p
     pq.PQfinish.argtypes = (c_void_p,)
     pq.PQstatus.argtypes = (c_void_p,)
+    pq.PQexec.argtypes = (c_void_p, c_char_p)
+    pq.PQexec.restype = c_void_p
+    pq.PQclear.argtypes = (c_void_p,)
 
     def as_null_terminated_array(strings):
         char_ps = tuple(c_char_p(string.encode('utf-8')) for string in strings) + (None,)
@@ -27,8 +30,13 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
     if status:
         raise Exception()
 
-    def query():
-        return pq.PQconnectdbParams
+    @contextmanager
+    def query(sql):
+        pg_result = pq.PQexec(conn, sql.encode('utf-8'));
+        try:
+            yield pg_result
+        finally:
+            pq.PQclear(pg_result)
 
     try:
         yield query

@@ -9,4 +9,5 @@ def test_streampy():
         ('password', 'password'),
     )
     with streampq_connect(params) as query:
-        assert query()
+        with query('SELECT 1; SELECT 2') as _:
+            pass
