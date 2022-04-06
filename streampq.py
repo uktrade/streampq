@@ -1,0 +1,3 @@
+
+def streampq():
+	pass
