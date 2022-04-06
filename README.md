@@ -12,3 +12,19 @@ pip install streampq
 ```
 
 The `libpq` binary library is also required.
+
+
+## Usage
+
+```python
+from streampq import streampq_connect
+
+connection_params = '...'
+sql = '...'
+
+with streampq_connect(connection_params) as query:
+    for (columns, rows) in query(sql):
+        for row in rows:
+            pass
+
+```
