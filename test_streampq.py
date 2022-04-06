@@ -8,6 +8,10 @@ def test_streampy():
         ('user', 'postgres'),
         ('password', 'password'),
     )
+    count = 0
     with streampq_connect(params) as query:
-        with query('SELECT 1; SELECT 2') as _:
-            pass
+        with query('SELECT 1; SELECT 2') as rows:
+            for row in rows:
+                count += 1
+
+    assert count == 2
