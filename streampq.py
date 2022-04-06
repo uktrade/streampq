@@ -76,9 +76,10 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
                     if status != PGRES_SINGLE_TUPLE:
                         continue
 
+                    num_columns = pq.PQnfields(result)
                     columns = tuple(
                         pq.PQfname(result, i).decode('utf-8')
-                        for i in range(0, pq.PQnfields(result))
+                        for i in range(0, num_columns)
                     )
 
                     yield (group_key, columns), result
