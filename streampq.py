@@ -61,7 +61,7 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
                     break
 
                 status = pq.PQresultStatus(result)
-                if status == PGRES_TUPLES_OK:
+                if status != PGRES_SINGLE_TUPLE:
                     group_key = object()
                     continue
 
