@@ -76,7 +76,7 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
 
         def get_columns(grouped_results):
             for _, rows in grouped_results:
-                yield from rows
+                yield None, rows
 
         results = get_results()
         grouped_results = groupby(results, key=lambda key_value: key_value[0])
