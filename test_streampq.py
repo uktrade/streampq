@@ -10,7 +10,7 @@ def test_streampy():
     )
     count = 0
     with streampq_connect(params) as query:
-        with query('SELECT 1; SELECT 2') as rows:
+        for rows in query('SELECT 1; SELECT 2'):
             for row in rows:
                 count += 1
 

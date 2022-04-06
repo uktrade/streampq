@@ -45,7 +45,6 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
         finally:
             pq.PQfinish(conn)
 
-    @contextmanager
     def query(conn, sql):
         ok = pq.PQsendQuery(conn, sql.encode('utf-8'));
         if not ok:
