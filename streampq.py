@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from functools import partial
 from ctypes import cdll, c_char_p, c_void_p
 from ctypes.util import find_library
 from itertools import groupby
@@ -30,16 +31,22 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
     keywords = as_null_terminated_array(tuple(param[0] for param in params))
     values = as_null_terminated_array(tuple(param[1] for param in params))
 
-    conn = pq.PQconnectdbParams(keywords, values, 0)
-    if not conn:
-        raise Exception()
+    @contextmanager
+    def get_conn():
+        conn = pq.PQconnectdbParams(keywords, values, 0)
+        if not conn:
+            raise Exception()
 
-    status = pq.PQstatus(conn)
-    if status:
-        raise Exception()
+        try:
+            status = pq.PQstatus(conn)
+            if status:
+                raise Exception()
+            yield conn
+        finally:
+            pq.PQfinish(conn)
 
     @contextmanager
-    def query(sql):
+    def query(conn, sql):
         ok = pq.PQsendQuery(conn, sql.encode('utf-8'));
         if not ok:
             raise Exception()
@@ -78,7 +85,5 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
 
         yield with_columns
 
-    try:
-        yield query
-    finally:
-        pq.PQfinish(conn)
+    with get_conn() as conn:
+        yield partial(query, conn)
