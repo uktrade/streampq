@@ -37,6 +37,7 @@ def streampq_connect(
     pq.PQnfields.argtypes = (c_void_p,)
     pq.PQfname.argtypes = (c_void_p, c_int)
     pq.PQfname.restype = c_char_p
+    pq.PQgetisnull.argtypes = (c_void_p, c_int, c_int)
     pq.PQgetvalue.argtypes = (c_void_p, c_int, c_int)
     pq.PQgetvalue.restype = c_char_p
     pq.PQftype.argtypes = (c_void_p, c_int)
@@ -106,6 +107,7 @@ def streampq_connect(
                         for i in range(0, num_columns)
                     )
                     values = tuple(
+                        None if pq.PQgetisnull(result, 0, i) else \
                         encoders_dict.get(pq.PQftype(result, i), identity)(pq.PQgetvalue(result, 0, i).decode('utf-8'))
                         for i in range(0, num_columns)
                     )
