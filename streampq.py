@@ -6,8 +6,17 @@ from itertools import groupby
 
 
 @contextmanager
-def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library('pq'))):
+def streampq_connect(
+        params=(),
+        encoders=(
+            (23, int),
+        ),
+        get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
+):
     pq = get_libpq()
+
+    encoders_dict = dict(encoders)
+    identity = lambda v: v
 
     pq.PQconnectdbParams.restype = c_void_p
     pq.PQfinish.argtypes = (c_void_p,)
@@ -22,6 +31,7 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
     pq.PQfname.restype = c_char_p
     pq.PQgetvalue.argtypes = (c_void_p, c_int, c_int)
     pq.PQgetvalue.restype = c_char_p
+    pq.PQftype.argtypes = (c_void_p, c_int)
     pq.PQclear.argtypes = (c_void_p,)
 
     PGRES_TUPLES_OK = 2
@@ -84,7 +94,7 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
                         for i in range(0, num_columns)
                     )
                     values = tuple(
-                        pq.PQgetvalue(result, 0, i).decode('utf-8')
+                        encoders_dict.get(pq.PQftype(result, i), identity)(pq.PQgetvalue(result, 0, i).decode('utf-8'))
                         for i in range(0, num_columns)
                     )
 
