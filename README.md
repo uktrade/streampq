@@ -1,6 +1,8 @@
 # streampq [![CircleCI](https://circleci.com/gh/uktrade/streampq.svg?style=shield)](https://circleci.com/gh/uktrade/streampq) [![Test Coverage](https://api.codeclimate.com/v1/badges/d96c6b7b6f8cf6ecfd9c/test_coverage)](https://codeclimate.com/github/uktrade/streampq/test_coverage)
 
-Stream results of multi statement PostgreSQL queries from Python without a server-side cursor.
+Stream results of multi-statement PostgreSQL queries from Python without a server-side cursor.
+
+For complex situations where multiple statements are needed, and where result are too big to store in memory at once.
 
 
 ## Installation
