@@ -11,7 +11,7 @@ For complex situations where multiple statements are needed, but also where resu
 pip install streampq
 ```
 
-The `libpq` binary library is also required. This is typically either already installed, or installed with 
+The `libpq` binary library is also required. This is typically either already installed, or installed by: 
 
 - macOS + brew: `brew install libpq`
 - Linux (Debian): `apt install libpq5`
