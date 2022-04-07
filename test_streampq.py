@@ -10,7 +10,10 @@ def test_streampy():
         ('user', 'postgres'),
         ('password', 'password'),
     )
-    sql = 'SELECT 1 as "first"; SELECT 1,\'2\',3.3,\'2021-01-01\'::date,\'{"a":2}\'::jsonb'
+    sql = '''
+        SELECT 1 as "first";
+        SELECT 1,'2',3.3,'2021-01-01'::date,'{"a":2}'::jsonb;
+    '''
     with streampq_connect(params) as query: 
         results = [
             (cols, list(rows))
