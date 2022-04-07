@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from datetime import date
 from decimal import Decimal
 from functools import partial
 from ctypes import cdll, c_char_p, c_void_p, c_int
@@ -10,9 +11,10 @@ from itertools import groupby
 def streampq_connect(
         params=(),
         encoders=(
-            (23, int),          # int4
-            (25, lambda v: v),  # text
-            (1700, Decimal),    # numeric
+            (23, int),                  # int4
+            (25, lambda v: v),          # text
+            (1082, date.fromisoformat), # date
+            (1700, Decimal),            # numeric
         ),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
