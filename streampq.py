@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from datetime import date
 from decimal import Decimal
 from functools import partial
+from json import loads as json_loads
 from ctypes import cdll, c_char_p, c_void_p, c_int
 from ctypes.util import find_library
 from itertools import groupby
@@ -15,6 +16,7 @@ def streampq_connect(
             (25, lambda v: v),          # text
             (1082, date.fromisoformat), # date
             (1700, Decimal),            # numeric
+            (3802, json_loads),         # jsonb
         ),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
