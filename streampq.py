@@ -84,7 +84,7 @@ def streampq_connect(params=(), get_libpq=lambda: cdll.LoadLibrary(find_library(
                         for i in range(0, num_columns)
                     )
                     values = tuple(
-                        pq.PQgetvalue(result, 0, i)
+                        pq.PQgetvalue(result, 0, i).decode('utf-8')
                         for i in range(0, num_columns)
                     )
 

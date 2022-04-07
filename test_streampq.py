@@ -16,6 +16,6 @@ def test_streampy():
         ]
 
     assert results[0][0] == ('first',)
-    assert results[0][1] == [(b'1',)]
+    assert results[0][1] == [('1',)]
     assert results[1][0] == ('?column?', '?column?')
-    assert results[1][1] == [(b'1', b'2')]
+    assert results[1][1] == [('1', '2')]
