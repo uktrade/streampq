@@ -8,7 +8,7 @@ def test_streampy():
         ('user', 'postgres'),
         ('password', 'password'),
     )
-    sql = 'SELECT 1 as "first"; SELECT 1,2'
+    sql = 'SELECT 1 as "first"; SELECT 1,\'2\''
     with streampq_connect(params) as query: 
         results = [
             (cols, list(rows))
@@ -18,4 +18,4 @@ def test_streampy():
     assert results[0][0] == ('first',)
     assert results[0][1] == [(1,)]
     assert results[1][0] == ('?column?', '?column?')
-    assert results[1][1] == [(1, 2)]
+    assert results[1][1] == [(1, '2')]

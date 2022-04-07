@@ -9,7 +9,8 @@ from itertools import groupby
 def streampq_connect(
         params=(),
         encoders=(
-            (23, int),
+            (23, int),          # int4
+            (25, lambda v: v),  # text
         ),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
