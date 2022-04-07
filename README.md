@@ -1,4 +1,4 @@
-# streampq
+# streampq [![CircleCI](https://circleci.com/gh/uktrade/streampq.svg?style=shield)](https://circleci.com/gh/uktrade/streampq)
 
 Stream results of multi statement PostgreSQL queries from Python
 
