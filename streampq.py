@@ -12,6 +12,7 @@ from itertools import groupby
 def streampq_connect(
         params=(),
         encoders=(
+            (None, lambda _: None),     # null
             (23, int),                  # int4
             (25, lambda v: v),          # text
             (114, json_loads),          # json
@@ -107,8 +108,9 @@ def streampq_connect(
                         for i in range(0, num_columns)
                     )
                     values = tuple(
-                        None if pq.PQgetisnull(result, 0, i) else \
-                        encoders_dict.get(pq.PQftype(result, i), identity)(pq.PQgetvalue(result, 0, i).decode('utf-8'))
+                        encoders_dict.get(
+                            None if pq.PQgetisnull(result, 0, i) else \
+                            pq.PQftype(result, i), identity)(pq.PQgetvalue(result, 0, i).decode('utf-8'))
                         for i in range(0, num_columns)
                     )
 
