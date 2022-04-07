@@ -14,6 +14,7 @@ def streampq_connect(
         encoders=(
             (23, int),                  # int4
             (25, lambda v: v),          # text
+            (114, json_loads),          # json
             (1082, date.fromisoformat), # date
             (1700, Decimal),            # numeric
             (3802, json_loads),         # jsonb
