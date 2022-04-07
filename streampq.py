@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from decimal import Decimal
 from functools import partial
 from ctypes import cdll, c_char_p, c_void_p, c_int
 from ctypes.util import find_library
@@ -11,6 +12,7 @@ def streampq_connect(
         encoders=(
             (23, int),          # int4
             (25, lambda v: v),  # text
+            (1700, Decimal),    # numeric
         ),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
@@ -92,6 +94,10 @@ def streampq_connect(
                     num_columns = pq.PQnfields(result)
                     columns = tuple(
                         pq.PQfname(result, i).decode('utf-8')
+                        for i in range(0, num_columns)
+                    )
+                    types = tuple(
+                        pq.PQftype(result, i)
                         for i in range(0, num_columns)
                     )
                     values = tuple(
