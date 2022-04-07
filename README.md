@@ -19,8 +19,24 @@ The `libpq` binary library is also required.
 ```python
 from streampq import streampq_connect
 
-connection_params = '...'
-sql = '...'
+# libpq connection paramters
+# https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-PARAMKEYWORDS
+#
+# Any can be ommitted and environment variables will be used instead
+# https://www.postgresql.org/docs/current/libpq-envars.html
+connection_params = (
+    ('host', 'localhost'),
+    ('port', '5432'),
+    ('dbname', 'postgres'),
+    ('user', 'postgres'),
+    ('password', 'password'),
+)
+
+# SQL statement(s) - if more than one, separate by ;
+sql = '''
+SELECT * FROM my_table;
+SELECT * FROM my_other_table;
+'''
 
 with streampq_connect(connection_params) as query:
     for (columns, rows) in query(sql):
