@@ -103,10 +103,6 @@ def streampq_connect(
                         pq.PQfname(result, i).decode('utf-8')
                         for i in range(0, num_columns)
                     )
-                    types = tuple(
-                        pq.PQftype(result, i)
-                        for i in range(0, num_columns)
-                    )
                     values = tuple(
                         encoders_dict.get(
                             None if pq.PQgetisnull(result, 0, i) else \
