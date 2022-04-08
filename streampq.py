@@ -87,7 +87,7 @@ def streampq_connect(
             pq.PQfinish(conn)
 
     @contextmanager
-    def cancel_any_query(sel, socket, conn):
+    def cancel_query(sel, socket, conn):
         try:
             yield
         finally:
@@ -203,6 +203,6 @@ def streampq_connect(
 
     with \
             get_conn() as (sel, socket, conn), \
-            cancel_any_query(sel, socket, conn):
+            cancel_query(sel, socket, conn):
 
         yield partial(query, sel, socket, conn)
