@@ -221,7 +221,7 @@ def _array(encoder):
     def parse(raw):
         state = ARRAY_OR_VALUE_START
         stack = [[]]
-        current = None
+        value = None
 
         for c in raw:
             if state is ARRAY_OR_VALUE_START:
@@ -231,40 +231,40 @@ def _array(encoder):
                     stack[-2].append(tuple(stack.pop()))
                     state = ARRAY_OR_VALUE_FINISH
                 elif c == '"':
-                    current = []
+                    value = []
                     state = QUOTED_VALUE
                 else:
-                    current = [c]
+                    value = [c]
                     state = UNQUOTED_VALUE
             elif state is ARRAY_OR_VALUE_FINISH:
                 if c == ',':
-                    current = []
+                    value = []
                     state = ARRAY_OR_VALUE_START
                 elif c == '}':
                     stack[-2].append(tuple(stack.pop()))
             elif state is UNQUOTED_VALUE:
                 if c == '}':
-                    value_str = ''.join(current)
+                    value_str = ''.join(value)
                     stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
                     stack[-2].append(tuple(stack.pop()))
                     state = ARRAY_OR_VALUE_FINISH
                 elif c == ',':
-                    value_str = ''.join(current)
+                    value_str = ''.join(value)
                     stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
                     state = ARRAY_OR_VALUE_START
                 else:
-                    current.append(c)
+                    value.append(c)
             elif state is QUOTED_VALUE:
                 if c == '"':
-                    value_str = ''.join(current)
+                    value_str = ''.join(value)
                     stack[-1].append(encoder(value_str))
                     state = ARRAY_OR_VALUE_FINISH
                 elif c == '\\':
                     state = QUOTED_ESCAPE
                 else:
-                    current.append(c)
+                    value.append(c)
             elif state is QUOTED_ESCAPE:
-                current.append(c)
+                value.append(c)
                 state = QUOTED_VALUE
 
         return stack[0][0]
