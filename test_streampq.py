@@ -114,7 +114,7 @@ def test_keyboard_interrupt(params):
     sql = '''
         SELECT count(*)
         FROM pg_stat_activity
-        WHERE query LIKE '%pg_sleep%' AND query NOT LIKE '%pg_stat_activity%'
+        WHERE query LIKE '%pg_sleep%' AND pid != pg_backend_pid()
     '''
 
     count = None
