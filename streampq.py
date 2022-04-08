@@ -243,22 +243,22 @@ def _array(encoder):
             elif state is UNQUOTED_VALUE:
                 if c == '}':
                     value_str = ''.join(value)
+                    value = []
                     stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
                     stack[-2].append(tuple(stack.pop()))
-                    value = []
                     state = ARRAY_OR_VALUE_FINISH
                 elif c == ',':
                     value_str = ''.join(value)
-                    stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
                     value = []
+                    stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
                     state = ARRAY_OR_VALUE_START
                 else:
                     value.append(c)
             elif state is QUOTED_VALUE:
                 if c == '"':
                     value_str = ''.join(value)
-                    stack[-1].append(encoder(value_str))
                     value = []
+                    stack[-1].append(encoder(value_str))
                     state = ARRAY_OR_VALUE_FINISH
                 elif c == '\\':
                     state = QUOTED_ESCAPE
