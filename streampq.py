@@ -3,6 +3,7 @@ from datetime import date
 from decimal import Decimal
 from functools import partial
 from json import loads as json_loads
+from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
 from ctypes import cdll, c_char_p, c_void_p, c_int
 from ctypes.util import find_library
 from itertools import groupby
@@ -28,6 +29,11 @@ def streampq_connect(
     identity = lambda v: v
 
     pq.PQconnectdbParams.restype = c_void_p
+    pq.PQsocket.argtypes = (c_void_p,)
+    pq.PQsetnonblocking.argtypes = (c_void_p, c_int)
+    pq.PQflush.argtypes = (c_void_p,)
+    pq.PQconsumeInput.argtypes = (c_void_p,)
+    pq.PQisBusy.argtypes = (c_void_p,)
     pq.PQfinish.argtypes = (c_void_p,)
     pq.PQstatus.argtypes = (c_void_p,)
     pq.PQsendQuery.argtypes = (c_void_p, c_char_p)
@@ -66,14 +72,62 @@ def streampq_connect(
             status = pq.PQstatus(conn)
             if status:
                 raise Exception()
-            yield conn
+
+            ok = pq.PQsetnonblocking(conn, 1)
+            if ok != 0:
+                raise Exception()
+
+            socket = pq.PQsocket(conn)
+            sel = DefaultSelector()
+            yield sel, socket, conn
         finally:
             pq.PQfinish(conn)
 
-    def query(conn, sql):
+    def block_until(sel, socket, events):
+        to_register = 0
+        for ev in events:
+            to_register |= ev
+        sel.register(socket, to_register)
+        while True:
+            for key, mask in sel.select():
+                for event in events:
+                    if event & mask:
+                        sel.unregister(socket)
+                        return event
+
+    def flush_write(sel, socket, conn):
+        while True:
+            incomplete = pq.PQflush(conn)
+            if incomplete == -1:
+                raise Exception()
+            if not incomplete:
+                break
+            ready_for = block_until(sel, socket, (EVENT_WRITE, EVENT_READ))
+            if ready_for == EVENT_WRITE:
+                continue
+            if ready_for == EVENT_READ:
+                ok = PQconsumeInput(conn)
+                if not ok:
+                    raise Exception()
+
+        block_until(sel, socket, (EVENT_READ,))
+
+    def flush_read(sel, socket, conn):
+        while True:
+            is_busy = pq.PQisBusy(conn)
+            if not is_busy:
+                break
+            block_until(sel, socket, (EVENT_READ,))
+            ok = pq.PQconsumeInput(conn)
+            if not ok:
+                raise Exception()
+
+    def query(sel, socket, conn, sql):
         ok = pq.PQsendQuery(conn, sql.encode('utf-8'));
         if not ok:
             raise Exception()
+
+        flush_write(sel, socket, conn)
 
         ok = pq.PQsetSingleRowMode(conn);
         if not ok:
@@ -85,6 +139,8 @@ def streampq_connect(
             group_key = object()
 
             while True:
+                flush_read(sel, socket, conn)
+
                 result = pq.PQgetResult(conn)
                 if not result:
                     break
@@ -124,5 +180,5 @@ def streampq_connect(
 
         return with_columns
 
-    with get_conn() as conn:
-        yield partial(query, conn)
+    with get_conn() as (sel, socket, conn):
+        yield partial(query, sel, socket, conn)
