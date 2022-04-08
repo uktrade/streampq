@@ -108,3 +108,4 @@ def test_keyboard_interrupt(params):
 
     os.kill(p.pid, signal.SIGINT)
     keyboard_interrupt_bubbled.wait(timeout=2)
+    p.join(timeout=2)
