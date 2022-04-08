@@ -85,7 +85,7 @@ def test_missing_column(params):
 
 
 def test_large_query(params):
-    string = '-' * 10_000_000
+    string = '-' * 100_000_000
     sql = f'''
         SELECT '{string}'
     '''
