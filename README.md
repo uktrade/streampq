@@ -2,7 +2,7 @@
 
 Stream results of multi-statement PostgreSQL queries from Python. Has these benefits over other Python PostgreSQL drivers:
 
-- Streams results from complex multi-statement queries even though SQL doesn't allow server-side cursors for such queries.
+- Streams results from complex multi-statement queries even though SQL doesn't allow server-side cursors for such queries - suitable for large amounts of results that don't fit in memory.
 
 - CTRL+C behaves as expected during queries - a `KeyboardInterrupt` is raised.
 
