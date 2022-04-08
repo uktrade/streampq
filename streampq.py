@@ -212,46 +212,41 @@ def streampq_connect(
 
 
 def _array(encoder):
-    ARRAY_OR_VALUE_START = object()
-    ARRAY_OR_VALUE_FINISH = object()
+    OUT = object()
     UNQUOTED_VALUE = object()
     QUOTED_VALUE = object()
     QUOTED_ESCAPE = object()
 
     def parse(raw):
-        state = ARRAY_OR_VALUE_START
+        state = OUT
         stack = [[]]
         value = []
 
         for c in raw:
-            if state is ARRAY_OR_VALUE_START:
+            if state is OUT:
                 if c == '{':
                     stack.append([])
                 elif c == '}':
                     stack[-2].append(tuple(stack.pop()))
-                    state = ARRAY_OR_VALUE_FINISH
                 elif c == '"':
                     state = QUOTED_VALUE
+                elif c == ',':
+                    pass
                 else:
                     value.append(c)
                     state = UNQUOTED_VALUE
-            elif state is ARRAY_OR_VALUE_FINISH:
-                if c == ',':
-                    state = ARRAY_OR_VALUE_START
-                elif c == '}':
-                    stack[-2].append(tuple(stack.pop()))
             elif state is UNQUOTED_VALUE:
                 if c == '}':
                     value_str = ''.join(value)
                     value = []
                     stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
                     stack[-2].append(tuple(stack.pop()))
-                    state = ARRAY_OR_VALUE_FINISH
+                    state = OUT
                 elif c == ',':
                     value_str = ''.join(value)
                     value = []
                     stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
-                    state = ARRAY_OR_VALUE_START
+                    state = OUT
                 else:
                     value.append(c)
             elif state is QUOTED_VALUE:
@@ -259,7 +254,7 @@ def _array(encoder):
                     value_str = ''.join(value)
                     value = []
                     stack[-1].append(encoder(value_str))
-                    state = ARRAY_OR_VALUE_FINISH
+                    state = OUT
                 elif c == '\\':
                     state = QUOTED_ESCAPE
                 else:
