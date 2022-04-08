@@ -42,7 +42,8 @@ jobs:
           command: |
             set -exu
             ~/workspace/cc-test-reporter before-build
-            coverage run -m pytest
+            ./test.sh
+            coverage combine
             coverage xml
             ~/workspace/cc-test-reporter format-coverage --output coverage/<< parameters.python-version >>.json
       - persist_to_workspace:
