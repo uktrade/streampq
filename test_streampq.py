@@ -54,6 +54,7 @@ def test_types(params):
         ("'{{{1,2},{1,2}},{{1,2},{1,2}}}'::int4[]", (((1,2),(1,2)),((1,2),(1,2)))),
         ("'{NULL}'::int4[]", (None,)),
         ("NULL::int4[]", None),
+        ("'{}'::int4[]", ()),
     )
     with streampq_connect(params) as query:
         results = tuple(
