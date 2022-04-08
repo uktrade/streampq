@@ -213,9 +213,9 @@ def streampq_connect(
 
 def _array(encoder):
     OUT = object()
-    UNQUOTED_VALUE = object()
-    QUOTED_VALUE = object()
-    QUOTED_ESCAPE = object()
+    IN_UNQUOTED = object()
+    IN_QUOTED = object()
+    IN_QUOTED_ESCAPE = object()
 
     def parse(raw):
         state = OUT
@@ -229,13 +229,13 @@ def _array(encoder):
                 elif c == '}':
                     stack[-2].append(tuple(stack.pop()))
                 elif c == '"':
-                    state = QUOTED_VALUE
+                    state = IN_QUOTED
                 elif c == ',':
                     pass
                 else:
                     value.append(c)
-                    state = UNQUOTED_VALUE
-            elif state is UNQUOTED_VALUE:
+                    state = IN_UNQUOTED
+            elif state is IN_UNQUOTED:
                 if c == '}':
                     value_str = ''.join(value)
                     value = []
@@ -249,19 +249,19 @@ def _array(encoder):
                     state = OUT
                 else:
                     value.append(c)
-            elif state is QUOTED_VALUE:
+            elif state is IN_QUOTED:
                 if c == '"':
                     value_str = ''.join(value)
                     value = []
                     stack[-1].append(encoder(value_str))
                     state = OUT
                 elif c == '\\':
-                    state = QUOTED_ESCAPE
+                    state = IN_QUOTED_ESCAPE
                 else:
                     value.append(c)
-            elif state is QUOTED_ESCAPE:
+            elif state is IN_QUOTED_ESCAPE:
                 value.append(c)
-                state = QUOTED_VALUE
+                state = IN_QUOTED
 
         return stack[0][0]
 
