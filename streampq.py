@@ -12,21 +12,23 @@ from itertools import groupby
 @contextmanager
 def streampq_connect(
         params=(),
-        encoders=(
-            (None, lambda _: None),     # null
-            (20, int),                  # int8
-            (23, int),                  # int4
-            (25, lambda v: v),          # text
-            (114, json_loads),          # json
-            (1082, date.fromisoformat), # date
-            (1700, Decimal),            # numeric
-            (3802, json_loads),         # jsonb
+        get_encoders=lambda: (
+            (None, lambda _: None),       # null
+            (20, int),                    # int8
+            (23, int),                    # int4
+            (25, lambda v: v),            # text
+            (114, json_loads),            # json
+            (1007, _array(int)),          # int4[]
+            (1009, _array(lambda v: v)),  # text[]
+            (1082, date.fromisoformat),   # date
+            (1700, Decimal),              # numeric
+            (3802, json_loads),           # jsonb
         ),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
     pq = get_libpq()
 
-    encoders_dict = dict(encoders)
+    encoders_dict = dict(get_encoders())
     identity = lambda v: v
 
     pq.PQconnectdbParams.restype = c_void_p
@@ -207,3 +209,65 @@ def streampq_connect(
             cancel_query(sel, socket, conn):
 
         yield partial(query, sel, socket, conn)
+
+
+def _array(encoder):
+    ARRAY_OR_VALUE_START = object()
+    ARRAY_OR_VALUE_FINISH = object()
+    UNQUOTED_VALUE = object()
+    QUOTED_VALUE = object()
+    QUOTED_ESCAPE = object()
+
+    def parse(raw):
+        state = ARRAY_OR_VALUE_START
+        stack = [[]]
+        current = None
+
+        for c in raw:
+            if state is ARRAY_OR_VALUE_START:
+                if c == '{':
+                    current = []
+                    stack.append([])
+                elif c == '}':
+                    stack[-2].append(stack.pop())
+                    state = ARRAY_OR_VALUE_FINISH
+                elif c == '"':
+                    state = QUOTED_VALUE
+                else:
+                    current = [c]
+                    state = UNQUOTED_VALUE
+            elif state is ARRAY_OR_VALUE_FINISH:
+                if c == ',':
+                    current = []
+                    state = ARRAY_OR_VALUE_START
+                elif c == '}':
+                    stack[-2].append(stack.pop())
+                    status = ARRAY_OR_VALUE_FINISH
+            elif state is UNQUOTED_VALUE:
+                if c == '}':
+                    value_str = ''.join(current)
+                    stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
+                    stack[-2].append(stack.pop())
+                    state = ARRAY_OR_VALUE_FINISH
+                elif c == ',':
+                    value_str = ''.join(current)
+                    stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
+                    state = ARRAY_OR_VALUE_START
+                else:
+                    current.append(c)
+            elif state is QUOTED_VALUE:
+                if c == '"':
+                    value_str = ''.join(current)
+                    stack[-1].append(encoder(value_str))
+                    state = ARRAY_OR_VALUE_FINISH
+                elif c == '\\':
+                    state = QUOTED_ESCAPE
+                else:
+                    current.append(c)
+            elif state is QUOTED_ESCAPE:
+                current.append(c)
+                state = QUOTED_VALUE
+
+        return stack[0][0]
+
+    return parse
