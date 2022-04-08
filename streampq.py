@@ -96,7 +96,7 @@ def streampq_connect(
                         continue
 
                     if status != PGRES_SINGLE_TUPLE:
-                        continue
+                        raise Exception(status)
 
                     num_columns = pq.PQnfields(result)
                     columns = tuple(

@@ -54,3 +54,13 @@ def test_types(params):
     assert results == tuple(
         python_value for _, python_value in sql_to_python_mapping
     )
+
+
+def test_syntax_error(params):
+    sql = '''
+        SELECT 1;
+        SELECTa;
+    '''
+    with streampq_connect(params) as query:
+        with pytest.raises(Exception):
+            next(iter(query(sql)))
