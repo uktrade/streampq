@@ -101,7 +101,7 @@ def streampq_connect(
                 buf = create_string_buffer(256)
                 ok = pq.PQcancel(pg_cancel, buf, 256)
                 if not ok:
-                    raise Exception()
+                    raise Exception(buf.raw.rstrip(b'\x00').decode('utf-8'))
             finally:
                 pq.PQfreeCancel(pg_cancel)
 
