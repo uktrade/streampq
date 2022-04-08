@@ -4,7 +4,7 @@ from decimal import Decimal
 from functools import partial
 from json import loads as json_loads
 from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
-from ctypes import cdll, c_char_p, c_void_p, c_int
+from ctypes import cdll, create_string_buffer, byref, c_char_p, c_void_p, c_int
 from ctypes.util import find_library
 from itertools import groupby
 
@@ -36,6 +36,10 @@ def streampq_connect(
     pq.PQisBusy.argtypes = (c_void_p,)
     pq.PQfinish.argtypes = (c_void_p,)
     pq.PQstatus.argtypes = (c_void_p,)
+    pq.PQgetCancel.argtypes = (c_void_p,)
+    pq.PQgetCancel.restype = c_void_p
+    pq.PQcancel.argtypes = (c_void_p, c_char_p, c_int)
+    pq.PQfreeCancel.argtypes = (c_void_p,)
     pq.PQsendQuery.argtypes = (c_void_p, c_char_p)
     pq.PQsetSingleRowMode.argtypes = (c_void_p,)
     pq.PQgetResult.argtypes = (c_void_p,)
@@ -64,11 +68,12 @@ def streampq_connect(
 
     @contextmanager
     def get_conn():
-        conn = pq.PQconnectdbParams(keywords, values, 0)
-        if not conn:
-            raise Exception()
-
+        conn = c_void_p(0)
         try:
+            conn = pq.PQconnectdbParams(keywords, values, 0)
+            if not conn:
+                raise Exception()
+
             status = pq.PQstatus(conn)
             if status:
                 raise Exception()
@@ -82,6 +87,23 @@ def streampq_connect(
             yield sel, socket, conn
         finally:
             pq.PQfinish(conn)
+
+    @contextmanager
+    def cancel_any_query(sel, socket, conn):
+        try:
+            yield
+        finally:
+            pg_cancel = c_void_p(0)
+            try:
+                pg_cancel = pq.PQgetCancel(conn)
+                if not pg_cancel:
+                    raise Exception()
+                buf = create_string_buffer(256)
+                ok = pq.PQcancel(pg_cancel, buf, 256)
+                if not ok:
+                    raise Exception()
+            finally:
+                pq.PQfreeCancel(pg_cancel)
 
     def block_until(sel, socket, events):
         to_register = 0
@@ -137,7 +159,6 @@ def streampq_connect(
             # So we can use groupby to separate rows for different statements
             # in multi-statment queries
             group_key = object()
-
             while True:
                 flush_read(sel, socket, conn)
 
@@ -180,5 +201,8 @@ def streampq_connect(
 
         return with_columns
 
-    with get_conn() as (sel, socket, conn):
+    with \
+            get_conn() as (sel, socket, conn), \
+            cancel_any_query(sel, socket, conn):
+
         yield partial(query, sel, socket, conn)
