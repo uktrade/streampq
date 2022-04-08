@@ -84,6 +84,22 @@ def test_missing_column(params):
             next(rows)
 
 
+def test_large_query(params):
+    string = '-' * 10_000_000
+    sql = f'''
+        SELECT '{string}'
+    '''
+
+    returned_string = None
+
+    with streampq_connect(params) as query:
+        for columns, rows in query(sql):
+            for row in rows:
+                returned_string = row[0]
+
+    assert string == returned_string
+
+
 def slow_query(params, about_to_run_query, keyboard_interrupt_bubbled):
     sql = '''
         SELECT pg_sleep(120)
