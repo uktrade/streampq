@@ -17,18 +17,40 @@ def params():
     )
 
 
-def test_streampy(params):
+def test_multiple_queries(params):
     sql = '''
         SELECT 1 as "first";
-        SELECT NULL,1,'2',3.3,'2021-01-01'::date,'{"a":2}'::jsonb,'{"a":2}'::json;
+        SELECT 2,'3';
     '''
     with streampq_connect(params) as query: 
-        results = [
-            (cols, list(rows))
+        results = tuple(
+            (cols, tuple(rows))
             for cols, rows in query(sql)
-        ]
+        )
 
-    assert results[0][0] == ('first',)
-    assert results[0][1] == [(1,)]
-    assert results[1][0] == ('?column?',) * 4 + ('date',) + ('jsonb',) + ('json',)
-    assert results[1][1] == [(None, 1, '2', Decimal('3.3'), date(2021, 1, 1), {'a': 2}, {'a': 2})]
+    assert results == (
+        (('first',), ((1,),)),
+        (('?column?','?column?'), ((2,'3'),)),
+    )
+
+
+def test_types(params):
+    sql_to_python_mapping = (
+        ("NULL", None),
+        ("1", 1),
+        ("'2'", '2'),
+        ("3.3", Decimal('3.3')),
+        ("'2021-01-01'::date", date(2021, 1, 1)),
+        ("'{\"a\":2}'::jsonb", {'a': 2}),
+        ("'{\"b\":2}'::json", {'b': 2}),
+    )
+    with streampq_connect(params) as query:
+        results = tuple(
+            tuple(rows)[0][0]
+            for sql_value, _ in sql_to_python_mapping
+            for cols, rows in query(f'SELECT {sql_value}')
+        )
+
+    assert results == tuple(
+        python_value for _, python_value in sql_to_python_mapping
+    )
