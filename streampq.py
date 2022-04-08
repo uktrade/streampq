@@ -14,6 +14,7 @@ def streampq_connect(
         params=(),
         encoders=(
             (None, lambda _: None),     # null
+            (20, int),                  # int8
             (23, int),                  # int4
             (25, lambda v: v),          # text
             (114, json_loads),          # json

@@ -42,6 +42,7 @@ def test_types(params):
     sql_to_python_mapping = (
         ("NULL", None),
         ("1", 1),
+        ("1::int8", 1),
         ("'🍰'", '🍰'),
         ("3.3", Decimal('3.3')),
         ("'2021-01-01'::date", date(2021, 1, 1)),
