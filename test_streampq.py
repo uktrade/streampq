@@ -3,6 +3,7 @@ from decimal import Decimal
 from multiprocessing import Process, Event
 from time import sleep
 import signal
+import uuid
 import os
 
 import pytest
@@ -100,9 +101,9 @@ def test_large_query(params):
     assert string == returned_string
 
 
-def slow_query(params, about_to_run_query, keyboard_interrupt_bubbled):
-    sql = '''
-        SELECT pg_sleep(120)
+def slow_query(params, unique_str, about_to_run_query, keyboard_interrupt_bubbled):
+    sql = f'''
+        SELECT '{unique_str}', pg_sleep(120)
     '''
     try:
         with streampq_connect(params) as query:
@@ -115,7 +116,8 @@ def slow_query(params, about_to_run_query, keyboard_interrupt_bubbled):
 def test_keyboard_interrupt(params):
     about_to_run_query = Event()
     keyboard_interrupt_bubbled = Event()
-    p = Process(target=slow_query, args=(params, about_to_run_query, keyboard_interrupt_bubbled))
+    unique_str = str(uuid.uuid4())
+    p = Process(target=slow_query, args=(params, unique_str, about_to_run_query, keyboard_interrupt_bubbled))
     p.start()
     about_to_run_query.wait(timeout=60)
 
@@ -127,10 +129,10 @@ def test_keyboard_interrupt(params):
     keyboard_interrupt_bubbled.wait(timeout=2)
     p.join(timeout=2)
 
-    sql = '''
+    sql = f'''
         SELECT count(*)
         FROM pg_stat_activity
-        WHERE query LIKE '%pg_sleep%' AND pid != pg_backend_pid()
+        WHERE query LIKE '%{unique_str}%' AND pid != pg_backend_pid()
     '''
 
     count = None
