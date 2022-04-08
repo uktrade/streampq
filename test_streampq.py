@@ -51,6 +51,7 @@ def test_types(params):
         ("'{\"b\":2}'::json", {'b': 2}),
         ("'{\"one \\\"and\",\"2\"}'::text[]", ['one "and', '2']),
         ("'{{{1,2},{1,2}},{{1,2},{1,2}}}'::int4[]", [[[1,2],[1,2]],[[1,2],[1,2]]]),
+        ("'{NULL}'::int4[]", [None]),
     )
     with streampq_connect(params) as query:
         results = tuple(
