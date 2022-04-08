@@ -3,4 +3,3 @@ parallel = True
 branch = True
 concurrency =
     multiprocessing
-source = .
