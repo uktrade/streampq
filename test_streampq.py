@@ -101,10 +101,7 @@ def test_large_query(params):
     assert string == returned_string
 
 
-def slow_query(params, unique_str, about_to_run_query, keyboard_interrupt_bubbled):
-    sql = f'''
-        SELECT '{unique_str}', pg_sleep(120)
-    '''
+def run_query(params, sql, about_to_run_query, keyboard_interrupt_bubbled):
     try:
         with streampq_connect(params) as query:
             about_to_run_query.set()
@@ -116,8 +113,13 @@ def slow_query(params, unique_str, about_to_run_query, keyboard_interrupt_bubble
 def test_keyboard_interrupt(params):
     about_to_run_query = Event()
     keyboard_interrupt_bubbled = Event()
+
     unique_str = str(uuid.uuid4())
-    p = Process(target=slow_query, args=(params, unique_str, about_to_run_query, keyboard_interrupt_bubbled))
+    sql = f'''
+        SELECT '{unique_str}', pg_sleep(120)
+    '''
+
+    p = Process(target=run_query, args=(params, sql, about_to_run_query, keyboard_interrupt_bubbled))
     p.start()
     about_to_run_query.wait(timeout=60)
 
