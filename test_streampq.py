@@ -73,7 +73,7 @@ def test_missing_column(params):
     '''
     with streampq_connect(params) as query:
         results = iter(query(sql))
-        cols, rows = next(results)
+        _, rows = next(results)
         next(rows)
         with pytest.raises(Exception):
             next(rows)
