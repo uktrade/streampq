@@ -229,7 +229,7 @@ def _array(encoder):
                     current = []
                     stack.append([])
                 elif c == '}':
-                    stack[-2].append(stack.pop())
+                    stack[-2].append(tuple(stack.pop()))
                     state = ARRAY_OR_VALUE_FINISH
                 elif c == '"':
                     state = QUOTED_VALUE
@@ -241,13 +241,13 @@ def _array(encoder):
                     current = []
                     state = ARRAY_OR_VALUE_START
                 elif c == '}':
-                    stack[-2].append(stack.pop())
+                    stack[-2].append(tuple(stack.pop()))
                     status = ARRAY_OR_VALUE_FINISH
             elif state is UNQUOTED_VALUE:
                 if c == '}':
                     value_str = ''.join(current)
                     stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
-                    stack[-2].append(stack.pop())
+                    stack[-2].append(tuple(stack.pop()))
                     state = ARRAY_OR_VALUE_FINISH
                 elif c == ',':
                     value_str = ''.join(current)
