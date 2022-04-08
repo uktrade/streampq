@@ -105,6 +105,8 @@ def streampq_connect(
             finally:
                 pq.PQfreeCancel(pg_cancel)
 
+    # Blocking using select rather than in libpq allows signals to be caught by Python.
+    # Notably SIGINT will result in a KeyboardInterrupt as expected
     def block_until(sel, socket, events):
         to_register = 0
         for ev in events:
