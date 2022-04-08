@@ -83,24 +83,24 @@ def test_missing_column(params):
             next(rows)
 
 
-def slow_query(params, running_query, keyboard_interrupt_bubbled):
+def slow_query(params, about_to_run_query, keyboard_interrupt_bubbled):
     sql = '''
         SELECT pg_sleep(120)
     '''
     try:
         with streampq_connect(params) as query:
-            running_query.set()
+            about_to_run_query.set()
             next(iter(query(sql)))
     except KeyboardInterrupt:
         keyboard_interrupt_bubbled.set()
 
 
 def test_keyboard_interrupt(params):
-    running_query = Event()
+    about_to_run_query = Event()
     keyboard_interrupt_bubbled = Event()
-    p = Process(target=slow_query, args=(params,running_query, keyboard_interrupt_bubbled))
+    p = Process(target=slow_query, args=(params, about_to_run_query, keyboard_interrupt_bubbled))
     p.start()
-    running_query.wait(timeout=60)
+    about_to_run_query.wait(timeout=60)
 
     # Try to make sure that the query is really running and we would be blocking in libpq
     # where keyboard interrupt wouldn't be responded to
