@@ -1,10 +1,12 @@
 # streampq [![CircleCI](https://circleci.com/gh/uktrade/streampq.svg?style=shield)](https://circleci.com/gh/uktrade/streampq) [![Test Coverage](https://api.codeclimate.com/v1/badges/d96c6b7b6f8cf6ecfd9c/test_coverage)](https://codeclimate.com/github/uktrade/streampq/test_coverage)
 
-Stream results of multi-statement PostgreSQL queries from Python without a server-side cursor.
+Stream results of multi-statement PostgreSQL queries from Python. Has these benefits over other Python PostgreSQL drivers:
 
-For complex situations where multiple statements are needed, but also where results are too big to store in memory at once. Existing Python PostgreSQL drivers don't seem to handle this case well - typically they require a server-side cursor, but SQL syntax doesn't allow a server-side cursor to "wrap" multiple SQL statements. This library side steps that problem by using libpq's _single-row mode_.
+- Streams results from complex multi-statement queries even though SQL doesn't allow server-side cursors for such queries.
 
-CTRL+C is respected during queries: even in the middle of a slow query, a KeyboardInterrupt is raised and bubbles up as is typical in Python programs. Other Python PostgreSQL drivers don't do this - CTRL+C can appear to be ignored. This is done by using libpq's _Asynchronous Command Processing_ to wait for query results using Python's [selectors](https://docs.python.org/3/library/selectors.html) module rather than in blocking libpq functions.
+- CTRL+C behaves as expected during queries - a `KeyboardInterrupt` is raised.
+
+- Every effort is made to cancel running queries on CTRL+C or errors.
 
 
 ## Installation
