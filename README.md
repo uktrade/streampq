@@ -4,7 +4,7 @@ Stream results of multi-statement PostgreSQL queries from Python without a serve
 
 For complex situations where multiple statements are needed, but also where results are too big to store in memory at once. Existing Python PostgreSQL drivers don't seem to handle this case well - typically they require a server-side cursor, but SQL syntax doesn't allow a server-side cursor to "wrap" multiple SQL statements. This library side steps that problem by using libpq's _single-row mode_.
 
-CTRL+C is respected during queries - even in the middle of a slow query, a KeyboardInterrupt is raised and bubbles up as is typical in Python programs. Other Python PostgreSQL drivers don't do this - CTRL+C can appear to be ignored. This is done by using libpq's _Asynchronous Command Processing_.
+CTRL+C is respected during queries - even in the middle of a slow query, a KeyboardInterrupt is raised and bubbles up as is typical in Python programs. Other Python PostgreSQL drivers don't do this - CTRL+C can appear to be ignored. This is done by using libpq's _Asynchronous Command Processing_ to wait for query results using Python's [selectors](https://docs.python.org/3/library/selectors.html) module rather than in blocking libpq functions.
 
 
 ## Installation
