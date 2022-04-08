@@ -6,7 +6,7 @@ Stream results of multi-statement PostgreSQL queries from Python. Has these bene
 
 - CTRL+C behaves as expected during queries - a `KeyboardInterrupt` is raised.
 
-- Every effort is made to cancel running queries on CTRL+C or errors.
+- Every effort is made to cancel running queries on CTRL+C or errors - so the server doesn't continue needlessly using resources.
 
 
 ## Installation
