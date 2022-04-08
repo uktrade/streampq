@@ -1,15 +1,23 @@
 from datetime import date
 from decimal import Decimal
+
+import pytest
+
 from streampq import streampq_connect
 
-def test_streampy():
-    params = (
+
+@pytest.fixture
+def params():
+    yield (
         ('host', 'localhost'),
         ('port', '5432'),
         ('dbname', 'postgres'),
         ('user', 'postgres'),
         ('password', 'password'),
     )
+
+
+def test_streampy(params):
     sql = '''
         SELECT 1 as "first";
         SELECT NULL,1,'2',3.3,'2021-01-01'::date,'{"a":2}'::jsonb,'{"a":2}'::json;
