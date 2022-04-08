@@ -221,7 +221,7 @@ def _array(encoder):
     def parse(raw):
         state = ARRAY_OR_VALUE_START
         stack = [[]]
-        value = None
+        value = []
 
         for c in raw:
             if state is ARRAY_OR_VALUE_START:
@@ -231,14 +231,12 @@ def _array(encoder):
                     stack[-2].append(tuple(stack.pop()))
                     state = ARRAY_OR_VALUE_FINISH
                 elif c == '"':
-                    value = []
                     state = QUOTED_VALUE
                 else:
-                    value = [c]
+                    value.append(c)
                     state = UNQUOTED_VALUE
             elif state is ARRAY_OR_VALUE_FINISH:
                 if c == ',':
-                    value = []
                     state = ARRAY_OR_VALUE_START
                 elif c == '}':
                     stack[-2].append(tuple(stack.pop()))
@@ -247,10 +245,12 @@ def _array(encoder):
                     value_str = ''.join(value)
                     stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
                     stack[-2].append(tuple(stack.pop()))
+                    value = []
                     state = ARRAY_OR_VALUE_FINISH
                 elif c == ',':
                     value_str = ''.join(value)
                     stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
+                    value = []
                     state = ARRAY_OR_VALUE_START
                 else:
                     value.append(c)
@@ -258,6 +258,7 @@ def _array(encoder):
                 if c == '"':
                     value_str = ''.join(value)
                     stack[-1].append(encoder(value_str))
+                    value = []
                     state = ARRAY_OR_VALUE_FINISH
                 elif c == '\\':
                     state = QUOTED_ESCAPE
