@@ -42,7 +42,7 @@ def test_types(params):
     sql_to_python_mapping = (
         ("NULL", None),
         ("1", 1),
-        ("'2'", '2'),
+        ("'🍰'", '🍰'),
         ("3.3", Decimal('3.3')),
         ("'2021-01-01'::date", date(2021, 1, 1)),
         ("'{\"a\":2}'::jsonb", {'a': 2}),
