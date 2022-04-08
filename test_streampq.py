@@ -64,3 +64,16 @@ def test_syntax_error(params):
     with streampq_connect(params) as query:
         with pytest.raises(Exception):
             next(iter(query(sql)))
+
+
+def test_missing_column(params):
+    sql = '''
+        SELECT 1;
+        SELECT a;
+    '''
+    with streampq_connect(params) as query:
+        results = iter(query(sql))
+        cols, rows = next(results)
+        next(rows)
+        with pytest.raises(Exception):
+            next(rows)
