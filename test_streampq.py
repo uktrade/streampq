@@ -110,3 +110,18 @@ def test_keyboard_interrupt(params):
     os.kill(p.pid, signal.SIGINT)
     keyboard_interrupt_bubbled.wait(timeout=2)
     p.join(timeout=2)
+
+    sql = '''
+        SELECT count(*)
+        FROM pg_stat_activity
+        WHERE query LIKE '%pg_sleep%' AND query NOT LIKE '%pg_stat_activity%'
+    '''
+
+    count = None
+
+    with streampq_connect(params) as query:
+        for cols, rows in query(sql):
+            for row in rows:
+                count = row[0]
+
+    assert count == 0
