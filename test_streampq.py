@@ -46,7 +46,7 @@ def test_multiple_queries(params):
     )
 
 
-def test_literals(params):
+def test_literal_escaping(params):
     sql = '''
         SELECT {first} as "first", {second} as "second";
     '''
@@ -65,7 +65,7 @@ def test_literals(params):
     )
 
 
-def test_identifiers(params):
+def test_identifier_escaping(params):
     sql = '''
         SELECT 'first' as {first}, 'second' as {second};
     '''
