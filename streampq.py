@@ -184,14 +184,16 @@ def streampq_connect(
             # So we can use groupby to separate rows for different statements
             # in multi-statment queries
             group_key = object()
+            result = c_void_p(0)
+
             while True:
                 flush_read(sel, socket, conn)
 
-                result = pq.PQgetResult(conn)
-                if not result:
-                    break
-
                 try:
+                    result = pq.PQgetResult(conn)
+                    if not result:
+                        break
+
                     status = pq.PQresultStatus(result)
                     if status == PGRES_TUPLES_OK:
                         group_key = object()
