@@ -84,33 +84,30 @@ def test_identifier_escaping(params):
     )
 
 
-def test_types(params):
-    sql_to_python_mapping = (
-        ("NULL", None),
-        ("1", 1),
-        ("1::int8", 1),
-        ("'🍰'", '🍰'),
-        ("3.3", Decimal('3.3')),
-        ("'2021-01-01'::date", date(2021, 1, 1)),
-        ("'{{\"a\":2}}'::jsonb", {'a': 2}),
-        ("'{{\"b\":2}}'::json", {'b': 2}),
-        ("'{{\"one \\\"and\",\"2\"}}'::text[]", ('one "and', '2')),
-        ("'{{\"NULL\"}}'::text[]", ('NULL',)),
-        ("'{{{{{{1,2}},{{1,2}}}},{{{{1,2}},{{1,2}}}}}}'::int4[]", (((1,2),(1,2)),((1,2),(1,2)))),
-        ("'{{NULL}}'::int4[]", (None,)),
-        ("NULL::int4[]", None),
-        ("'{{}}'::int4[]", ()),
-    )
+@pytest.mark.parametrize("sql_value,python_value", [
+    ("NULL", None),
+    ("1", 1),
+    ("1::int8", 1),
+    ("'🍰'", '🍰'),
+    ("3.3", Decimal('3.3')),
+    ("'2021-01-01'::date", date(2021, 1, 1)),
+    ("'{{\"a\":2}}'::jsonb", {'a': 2}),
+    ("'{{\"b\":2}}'::json", {'b': 2}),
+    ("'{{\"one \\\"and\",\"2\"}}'::text[]", ('one "and', '2')),
+    ("'{{\"NULL\"}}'::text[]", ('NULL',)),
+    ("'{{{{{{1,2}},{{1,2}}}},{{{{1,2}},{{1,2}}}}}}'::int4[]", (((1,2),(1,2)),((1,2),(1,2)))),
+    ("'{{NULL}}'::int4[]", (None,)),
+    ("NULL::int4[]", None),
+    ("'{{}}'::int4[]", ()),
+])
+def test_decoders(params, sql_value, python_value):
     with streampq_connect(params) as query:
-        results = tuple(
+        result = tuple(
             tuple(rows)[0][0]
-            for sql_value, _ in sql_to_python_mapping
             for cols, rows in query(f'SELECT {sql_value}')
-        )
+        )[0]
 
-    assert results == tuple(
-        python_value for _, python_value in sql_to_python_mapping
-    )
+    assert result == python_value
 
 
 def test_syntax_error(params):
