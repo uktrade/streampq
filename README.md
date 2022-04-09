@@ -1,12 +1,12 @@
 # streampq [![CircleCI](https://circleci.com/gh/uktrade/streampq.svg?style=shield)](https://circleci.com/gh/uktrade/streampq) [![Test Coverage](https://api.codeclimate.com/v1/badges/d96c6b7b6f8cf6ecfd9c/test_coverage)](https://codeclimate.com/github/uktrade/streampq/test_coverage)
 
-Stream results of multi-statement PostgreSQL queries from Python without server-side cursors. Has these benefits over other Python PostgreSQL drivers:
+Stream results of multi-statement PostgreSQL queries from Python without server-side cursors. Has these benefits over some other Python PostgreSQL drivers:
 
 - Streams results from complex multi-statement queries even though SQL doesn't allow server-side cursors for such queries - suitable for large amounts of results that don't fit in memory.
 
-- CTRL+C behaves as expected during queries - a `KeyboardInterrupt` is raised and so by default will exit the program.
+- CTRL+C (SIGINT) by default behaves as expected during queries - a `KeyboardInterrupt` is raised will exit the program.
 
-- Every effort is made to cancel running queries on CTRL+C, other signals, or errors - so the server doesn't continue needlessly using resources.
+- By default every effort is made to cancel dueries on CTRL+C or errors - the server doesn't continue needlessly using resources.
 
 
 ## Installation
