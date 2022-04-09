@@ -12,7 +12,7 @@ from itertools import groupby
 @contextmanager
 def streampq_connect(
         params=(),
-        get_encoders=lambda: (
+        get_decoders=lambda: (
             (None, lambda _: None),       # null
             (20, int),                    # int8
             (23, int),                    # int4
@@ -28,7 +28,7 @@ def streampq_connect(
 ):
     pq = get_libpq()
 
-    encoders_dict = dict(get_encoders())
+    decoders_dict = dict(get_decoders())
     identity = lambda v: v
 
     pq.PQconnectdbParams.restype = c_void_p
@@ -189,7 +189,7 @@ def streampq_connect(
                         for i in range(0, num_columns)
                     )
                     values = tuple(
-                        encoders_dict.get(
+                        decoders_dict.get(
                             None if pq.PQgetisnull(result, 0, i) else \
                             pq.PQftype(result, i), identity)(pq.PQgetvalue(result, 0, i).decode('utf-8'))
                         for i in range(0, num_columns)
@@ -216,7 +216,7 @@ def streampq_connect(
         yield partial(query, sel, socket, conn)
 
 
-def _array(encoder):
+def _array(decoder):
     OUT = object()
     IN_UNQUOTED = object()
     IN_QUOTED = object()
@@ -244,13 +244,13 @@ def _array(encoder):
                 if c == '}':
                     value_str = ''.join(value)
                     value = []
-                    stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
+                    stack[-1].append(None if value_str == 'NULL' else decoder(value_str))
                     stack[-2].append(tuple(stack.pop()))
                     state = OUT
                 elif c == ',':
                     value_str = ''.join(value)
                     value = []
-                    stack[-1].append(None if value_str == 'NULL' else encoder(value_str))
+                    stack[-1].append(None if value_str == 'NULL' else decoder(value_str))
                     state = OUT
                 else:
                     value.append(c)
@@ -258,7 +258,7 @@ def _array(encoder):
                 if c == '"':
                     value_str = ''.join(value)
                     value = []
-                    stack[-1].append(encoder(value_str))
+                    stack[-1].append(decoder(value_str))
                     state = OUT
                 elif c == '\\':
                     state = IN_QUOTED_ESCAPE
