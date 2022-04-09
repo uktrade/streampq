@@ -217,6 +217,7 @@ def streampq_connect(
                     yield (group_key, columns), values
                 finally:
                     pq.PQclear(result)
+                    result = c_void_p(0)
 
         def get_columns(grouped_results):
             for (_, columns), rows in grouped_results:
