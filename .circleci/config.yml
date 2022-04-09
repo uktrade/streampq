@@ -47,7 +47,7 @@ jobs:
             ./test.sh
             coverage combine
             coverage xml
-            ~/workspace/cc-test-reporter format-coverage --output coverage/<< parameters.python-version >>.json
+            ~/workspace/cc-test-reporter format-coverage --output coverage/<< parameters.python-version >>-<< parameters.postgres-version >>.json
       - persist_to_workspace:
           root: ./
           paths:
@@ -62,7 +62,7 @@ jobs:
           name: Upload coverage
           command: |
             set -exu
-            ~/workspace/cc-test-reporter sum-coverage ~/workspace/coverage/*.json -p 3
+            ~/workspace/cc-test-reporter sum-coverage ~/workspace/coverage/*.json -p 6
             ~/workspace/cc-test-reporter upload-coverage
 
 workflows:
@@ -80,6 +80,7 @@ workflows:
                 - "3.9.7"
               postgres-version:
                 - "14.2"
+                - "13.6"
 
       - upload-coverage:
           requires:
