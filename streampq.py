@@ -147,14 +147,16 @@ def streampq_connect(
 
     def escape_literal(conn, string):
         string_encoded = string.encode('utf-8')
-        escaped = None
+        escaped_p = None
         try:
-            escaped = pq.PQescapeLiteral(conn, string_encoded, len(string_encoded))
-            if not escaped:
+            escaped_p = pq.PQescapeLiteral(conn, string_encoded, len(string_encoded))
+            if not escaped_p:
                 raise StreamPQError(pq.PQerrorMessage(conn))
-            return cast(escaped, c_char_p).value.decode('utf-8')
+            escaped_str = cast(escaped_p, c_char_p).value.decode('utf-8')
         finally:
-            pq.PQfreemem(escaped)
+            pq.PQfreemem(escaped_p)
+
+        return escaped_str
 
     def query(sel, socket, conn, sql, literals=()):
         escaped_literals = tuple(escape_literal(conn, literal) for literal in literals)
