@@ -74,7 +74,7 @@ def test_syntax_error(params):
         SELECTa;
     '''
     with streampq_connect(params) as query:
-        with pytest.raises(StreamPQError):
+        with pytest.raises(StreamPQError, match='syntax error at or near "SELECTa"'):
             next(iter(query(sql)))
 
 
@@ -87,7 +87,7 @@ def test_missing_column(params):
         results = iter(query(sql))
         _, rows = next(results)
         next(rows)
-        with pytest.raises(StreamPQError):
+        with pytest.raises(StreamPQError, match='column "a" does not exist'):
             next(rows)
 
 
