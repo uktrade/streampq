@@ -226,7 +226,7 @@ def get_array_decoder(value_decoder):
     IN_QUOTED = object()
     IN_QUOTED_ESCAPE = object()
 
-    def decoder(raw):
+    def decode(raw):
         state = OUT
         stack = [[]]
         value = []
@@ -274,7 +274,7 @@ def get_array_decoder(value_decoder):
 
         return stack[0][0]
 
-    return decoder
+    return decode
 
 
 class StreamPQError(Exception):
