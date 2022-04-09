@@ -155,7 +155,7 @@ def streampq_connect(
         if allow_unescaped and not must_escape:
             return string_encoded
         string_encoded_bytes = string_encoded.encode('utf-8')
-        escaped_p = None
+        escaped_p = c_void_p(0)
         try:
             escaped_p = func(conn, string_encoded_bytes, len(string_encoded_bytes))
             if not escaped_p:
