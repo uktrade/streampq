@@ -110,6 +110,22 @@ def test_decoders(params, sql_value, python_value):
     assert result == python_value
 
 
+@pytest.mark.parametrize("python_value,sql_value_as_python", [
+    (None, None),
+    ('A string', 'A string')
+])
+def test_encoders(params, python_value, sql_value_as_python):
+    with streampq_connect(params) as query:
+        result = tuple(
+            tuple(rows)[0][0]
+            for cols, rows in query('SELECT {value} as "col"', literals=(
+                ('value', python_value),
+            ))
+        )[0]
+
+    assert result == sql_value_as_python
+
+
 def test_syntax_error(params):
     sql = '''
         SELECT 1;

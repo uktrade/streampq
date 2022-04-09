@@ -12,11 +12,13 @@ from itertools import groupby
 @contextmanager
 def streampq_connect(
         params=(),
+        get_encoders=lambda: get_default_encoders(),
         get_decoders=lambda: get_default_decoders(),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
     pq = get_libpq()
 
+    encoders_dict = dict(get_encoders())
     decoders_dict = dict(get_decoders())
     identity = lambda v: v
 
@@ -147,8 +149,8 @@ def streampq_connect(
             if not ok:
                 raise CommunicationError(pq.PQerrorMessage(conn))
 
-    def escape(conn, string, func):
-        string_encoded = string.encode('utf-8')
+    def escape(conn, value, func):
+        string_encoded = encoders_dict[type(value)](value).encode('utf-8')
         escaped_p = None
         try:
             escaped_p = func(conn, string_encoded, len(string_encoded))
@@ -162,7 +164,7 @@ def streampq_connect(
 
     def query(sel, socket, conn, sql, literals=(), identifiers=()):
         ok = pq.PQsendQuery(conn, sql.format(**dict(
-            tuple((key, escape(conn, value, pq.PQescapeLiteral)) for key, value in literals) +
+            tuple((key, 'NULL' if value is None else escape(conn, value, pq.PQescapeLiteral)) for key, value in literals) +
             tuple((key, escape(conn, value, pq.PQescapeIdentifier)) for key, value in identifiers)
         )).encode('utf-8'));
         if not ok:
@@ -225,6 +227,12 @@ def streampq_connect(
             cancel_query(sel, socket, conn):
 
         yield partial(query, sel, socket, conn)
+
+
+def get_default_encoders():
+    return (
+        (type(''), lambda value: value),
+    )
 
 
 def get_default_decoders():
