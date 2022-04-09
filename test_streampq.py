@@ -114,6 +114,8 @@ def test_decoders(params, sql_value, python_value):
     (None, None),
     ('A string', 'A string'),
     (1, '1'),
+    (3.3, '3.3'),
+    (Decimal('3.3'), '3.3'),
     (date(2021, 1, 1), '2021-01-01'),
     (Exception, "<class 'Exception'>"),  # No encoder specified so defaults to str
 ])
