@@ -48,12 +48,15 @@ def test_multiple_queries(params):
 
 def test_literals(params):
     sql = '''
-        SELECT {} as "first", {} as "second";
+        SELECT {first} as "first", {second} as "second";
     '''
     with streampq_connect(params) as query:
         results = tuple(
             (cols, tuple(rows))
-            for cols, rows in query(sql, literals=('1', 'an\'"other'))
+            for cols, rows in query(sql, literals=(
+                ('first', '1'),
+                ('second', 'an\'"other'),
+            ))
         )
 
     assert results == (

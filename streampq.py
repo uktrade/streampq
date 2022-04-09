@@ -159,8 +159,8 @@ def streampq_connect(
         return escaped_str
 
     def query(sel, socket, conn, sql, literals=()):
-        escaped_literals = tuple(escape_literal(conn, literal) for literal in literals)
-        ok = pq.PQsendQuery(conn, sql.format(*escaped_literals).encode('utf-8'));
+        escaped_literals = dict((key, escape_literal(conn, value)) for key, value in literals)
+        ok = pq.PQsendQuery(conn, sql.format(**escaped_literals).encode('utf-8'));
         if not ok:
             raise CommunicationError(pq.PQerrorMessage(conn))
 
