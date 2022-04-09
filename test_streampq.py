@@ -5,6 +5,7 @@ from time import sleep
 import signal
 import uuid
 import os
+import sys
 
 import pytest
 
@@ -113,25 +114,33 @@ def test_large_query(params):
     assert string == returned_string
 
 
-def run_query(params, sql, about_to_run_query, keyboard_interrupt_bubbled):
+def run_query(params, sql, about_to_run_query, exception_bubbled, exception_type):
+    def sigterm_handler(_, __):
+        sys.exit(0)
+    signal.signal(signal.SIGTERM, sigterm_handler)
+
     try:
         with streampq_connect(params) as query:
             about_to_run_query.set()
             next(iter(query(sql)))
-    except KeyboardInterrupt:
-        keyboard_interrupt_bubbled.set()
+    except exception_type:
+        exception_bubbled.set()
 
 
-def test_keyboard_interrupt(params):
+@pytest.mark.parametrize("signal_type,exception_type", [
+    (signal.SIGINT, KeyboardInterrupt),
+    (signal.SIGTERM, SystemExit),
+])
+def test_keyboard_interrupt(params, signal_type, exception_type):
     about_to_run_query = Event()
-    keyboard_interrupt_bubbled = Event()
+    exception_bubbled = Event()
 
     unique_str = str(uuid.uuid4())
     sql = f'''
         SELECT '{unique_str}', pg_sleep(120)
     '''
 
-    p = Process(target=run_query, args=(params, sql, about_to_run_query, keyboard_interrupt_bubbled))
+    p = Process(target=run_query, args=(params, sql, about_to_run_query, exception_bubbled, exception_type))
     p.start()
     about_to_run_query.wait(timeout=60)
 
@@ -139,8 +148,8 @@ def test_keyboard_interrupt(params):
     # where keyboard interrupt wouldn't be responded to
     sleep(2)
 
-    os.kill(p.pid, signal.SIGINT)
-    keyboard_interrupt_bubbled.wait(timeout=2)
+    os.kill(p.pid, signal_type)
+    exception_bubbled.wait(timeout=2)
     p.join(timeout=2)
 
     sql = f'''
