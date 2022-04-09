@@ -150,7 +150,7 @@ def streampq_connect(
                 raise CommunicationError(pq.PQerrorMessage(conn))
 
     def escape(conn, value, func):
-        string_encoded = encoders_dict[type(value)](value).encode('utf-8')
+        string_encoded = encoders_dict.get(type(value), str)(value).encode('utf-8')
         escaped_p = None
         try:
             escaped_p = func(conn, string_encoded, len(string_encoded))
