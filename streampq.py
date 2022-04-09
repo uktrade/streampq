@@ -181,7 +181,7 @@ def streampq_connect(
                         continue
 
                     if status != PGRES_SINGLE_TUPLE:
-                        raise StreamPQError(pq.PQerrorMessage(conn))
+                        raise QueryError(pq.PQerrorMessage(conn))
 
                     num_columns = pq.PQnfields(result)
                     columns = tuple(
@@ -274,4 +274,8 @@ def _array(encoder):
 
 
 class StreamPQError(Exception):
+    pass
+
+
+class QueryError(StreamPQError):
     pass

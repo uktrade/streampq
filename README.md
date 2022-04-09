@@ -56,3 +56,14 @@ with streampq_connect(connection_params) as query:
 ## Exceptions
 
 Exceptions derive from `streampq.StreamPQError`. If there is any more information available on the error, it's added as a string in its `args` property. This is included in the string representation of the exception by default.
+
+
+## Exception hierarchy
+
+  - **StreamPQError**
+
+    Base class for all explicitly-thrown exceptions
+
+    - **QueryError**
+
+      An error occurred while attempting to run a query. Typically this is due to a syntax error or a missing column.
