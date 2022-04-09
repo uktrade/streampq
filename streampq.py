@@ -247,8 +247,11 @@ def get_default_decoders():
         (None, lambda _: None),                                      # null
         (16, lambda v: v == 't'),                                    # bool
         (20, int),                                                   # int8
+        (21, int),                                                   # smallint
         (23, int),                                                   # int4
         (25, lambda v: v),                                           # text
+        (700, float),                                                # real
+        (701, float),                                                # double precision
         (114, json_loads),                                           # json
         (1000, get_array_decoder(lambda v: v == 't')),               # bool[]
         (1007, get_array_decoder(int)),                              # int4[]
