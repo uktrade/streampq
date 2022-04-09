@@ -113,6 +113,7 @@ def test_decoders(params, sql_value, python_value):
 @pytest.mark.parametrize("python_value,sql_value_as_python", [
     (None, None),
     ('A string', 'A string'),
+    (1, '1'),
     (Exception, "<class 'Exception'>"),  # No encoder specified so defaults to str
 ])
 def test_encoders(params, python_value, sql_value_as_python):
