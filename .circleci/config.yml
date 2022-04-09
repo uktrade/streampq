@@ -21,9 +21,11 @@ jobs:
     parameters:
       python-version:
         type: string
+      postgres-version:
+        type: string
     docker:
       - image: cimg/python:<< parameters.python-version >>
-      - image: cimg/postgres:14.2
+      - image: cimg/postgres:<< parameters.postgres-version >>
         environment:
           POSTGRES_DB: postgres
           POSTGRES_USER: postgres
@@ -76,6 +78,8 @@ workflows:
                 - "3.7.11"
                 - "3.8.12"
                 - "3.9.7"
+              postgres-version:
+                - "14.2"
 
       - upload-coverage:
           requires:
