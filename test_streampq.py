@@ -114,6 +114,8 @@ def test_decoders(params, sql_value, python_value):
 
 @pytest.mark.parametrize("python_value,sql_value_as_python", [
     (None, None),
+    (True, True),
+    (False, False),
     ('A string', 'A string'),
     (1, '1'),
     (3.3, '3.3'),

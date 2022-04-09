@@ -149,11 +149,15 @@ def streampq_connect(
             if not ok:
                 raise CommunicationError(pq.PQerrorMessage(conn))
 
-    def escape(conn, value, func):
-        string_encoded = encoders_dict.get(type(value), str)(value).encode('utf-8')
+    def escape(conn, value, func, allow_unescaped):
+        must_escape, encoder = encoders_dict.get(type(value), (True, str))
+        string_encoded = encoder(value)
+        if allow_unescaped and not must_escape:
+            return string_encoded
+        string_encoded_bytes = string_encoded.encode('utf-8')
         escaped_p = None
         try:
-            escaped_p = func(conn, string_encoded, len(string_encoded))
+            escaped_p = func(conn, string_encoded_bytes, len(string_encoded_bytes))
             if not escaped_p:
                 raise StreamPQError(pq.PQerrorMessage(conn))
             escaped_str = cast(escaped_p, c_char_p).value.decode('utf-8')
@@ -164,8 +168,8 @@ def streampq_connect(
 
     def query(sel, socket, conn, sql, literals=(), identifiers=()):
         ok = pq.PQsendQuery(conn, sql.format(**dict(
-            tuple((key, 'NULL' if value is None else escape(conn, value, pq.PQescapeLiteral)) for key, value in literals) +
-            tuple((key, escape(conn, value, pq.PQescapeIdentifier)) for key, value in identifiers)
+            tuple((key, escape(conn, value, pq.PQescapeLiteral, True)) for key, value in literals) +
+            tuple((key, escape(conn, value, pq.PQescapeIdentifier, False)) for key, value in identifiers)
         )).encode('utf-8'));
         if not ok:
             raise CommunicationError(pq.PQerrorMessage(conn))
@@ -231,7 +235,10 @@ def streampq_connect(
 
 def get_default_encoders():
     return (
-        (type(''), lambda value: value),
+        # type, (must escape, encoder)
+        (type(None), (False, lambda _: 'NULL')),
+        (type(True), (False, lambda value: 'TRUE' if value else 'FALSE')),
+        (type(''), (True, lambda value: value)),
     )
 
 
