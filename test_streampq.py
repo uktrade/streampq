@@ -65,6 +65,25 @@ def test_literals(params):
     )
 
 
+def test_identifiers(params):
+    sql = '''
+        SELECT 'first' as {first}, 'second' as {second};
+    '''
+    with streampq_connect(params) as query:
+        results = tuple(
+            (cols, tuple(rows))
+            for cols, rows in query(sql, identifiers=(
+                ('first', '1'),
+                ('second', 'an\'"other'),
+            ))
+        )
+
+    assert results == (
+        (('1', 'an\'"other'),
+        (('first', 'second'),)),
+    )
+
+
 def test_types(params):
     sql_to_python_mapping = (
         ("NULL", None),

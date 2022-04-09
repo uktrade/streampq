@@ -36,6 +36,8 @@ def streampq_connect(
 
     pq.PQescapeLiteral.argtypes = (c_void_p, c_char_p, c_size_t)
     pq.PQescapeLiteral.restype = c_void_p
+    pq.PQescapeIdentifier.argtypes = (c_void_p, c_char_p, c_size_t)
+    pq.PQescapeIdentifier.restype = c_void_p
     pq.PQfreemem.argtypes = (c_void_p,)
 
     pq.PQsendQuery.argtypes = (c_void_p, c_char_p)
@@ -145,11 +147,11 @@ def streampq_connect(
             if not ok:
                 raise CommunicationError(pq.PQerrorMessage(conn))
 
-    def escape_literal(conn, string):
+    def escape(conn, string, func):
         string_encoded = string.encode('utf-8')
         escaped_p = None
         try:
-            escaped_p = pq.PQescapeLiteral(conn, string_encoded, len(string_encoded))
+            escaped_p = func(conn, string_encoded, len(string_encoded))
             if not escaped_p:
                 raise StreamPQError(pq.PQerrorMessage(conn))
             escaped_str = cast(escaped_p, c_char_p).value.decode('utf-8')
@@ -158,9 +160,11 @@ def streampq_connect(
 
         return escaped_str
 
-    def query(sel, socket, conn, sql, literals=()):
-        escaped_literals = dict((key, escape_literal(conn, value)) for key, value in literals)
-        ok = pq.PQsendQuery(conn, sql.format(**escaped_literals).encode('utf-8'));
+    def query(sel, socket, conn, sql, literals=(), identifiers=()):
+        ok = pq.PQsendQuery(conn, sql.format(**dict(
+            tuple((key, escape(conn, value, pq.PQescapeLiteral)) for key, value in literals) +
+            tuple((key, escape(conn, value, pq.PQescapeIdentifier)) for key, value in identifiers)
+        )).encode('utf-8'));
         if not ok:
             raise CommunicationError(pq.PQerrorMessage(conn))
 
