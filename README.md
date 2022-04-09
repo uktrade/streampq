@@ -71,3 +71,7 @@ Exceptions derive from `streampq.StreamPQError`. If there is any more informatio
     - **QueryError**
 
       An error occurred while attempting to run a query. Typically this is due to a syntax error or a missing column.
+
+    - **CancelError**
+
+      An error occurred while attempting to cancel a query.

@@ -103,11 +103,11 @@ def streampq_connect(
             try:
                 pg_cancel = pq.PQgetCancel(conn)
                 if not pg_cancel:
-                    raise StreamPQError(pq.PQerrorMessage(conn))
+                    raise CancelError(pq.PQerrorMessage(conn))
                 buf = create_string_buffer(256)
                 ok = pq.PQcancel(pg_cancel, buf, 256)
                 if not ok:
-                    raise StreamPQError(buf.raw.rstrip(b'\x00').decode('utf-8'))
+                    raise CancelError(buf.raw.rstrip(b'\x00').decode('utf-8'))
             finally:
                 pq.PQfreeCancel(pg_cancel)
 
@@ -282,4 +282,8 @@ class ConnectionError(StreamPQError):
 
 
 class QueryError(StreamPQError):
+    pass
+
+
+class CancelError(StreamPQError):
     pass
