@@ -12,18 +12,7 @@ from itertools import groupby
 @contextmanager
 def streampq_connect(
         params=(),
-        get_decoders=lambda: (
-            (None, lambda _: None),       # null
-            (20, int),                    # int8
-            (23, int),                    # int4
-            (25, lambda v: v),            # text
-            (114, json_loads),            # json
-            (1007, _array(int)),          # int4[]
-            (1009, _array(lambda v: v)),  # text[]
-            (1082, date.fromisoformat),   # date
-            (1700, Decimal),              # numeric
-            (3802, json_loads),           # jsonb
-        ),
+        get_decoders=lambda: get_default_decoders(),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
     pq = get_libpq()
@@ -214,6 +203,21 @@ def streampq_connect(
             cancel_query(sel, socket, conn):
 
         yield partial(query, sel, socket, conn)
+
+
+def get_default_decoders():
+    return (
+        (None, lambda _: None),       # null
+        (20, int),                    # int8
+        (23, int),                    # int4
+        (25, lambda v: v),            # text
+        (114, json_loads),            # json
+        (1007, _array(int)),          # int4[]
+        (1009, _array(lambda v: v)),  # text[]
+        (1082, date.fromisoformat),   # date
+        (1700, Decimal),              # numeric
+        (3802, json_loads),           # jsonb
+    )
 
 
 def _array(decoder):
