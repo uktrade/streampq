@@ -228,10 +228,10 @@ def _array(encoder):
                     stack.append([])
                 elif c == '}':
                     stack[-2].append(tuple(stack.pop()))
-                elif c == '"':
-                    state = IN_QUOTED
                 elif c == ',':
                     pass
+                elif c == '"':
+                    state = IN_QUOTED
                 else:
                     value.append(c)
                     state = IN_UNQUOTED
