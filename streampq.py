@@ -207,20 +207,20 @@ def streampq_connect(
 
 def get_default_decoders():
     return (
-        (None, lambda _: None),             # null
-        (20, int),                          # int8
-        (23, int),                          # int4
-        (25, lambda v: v),                  # text
-        (114, json_loads),                  # json
-        (1007, decode_array(int)),          # int4[]
-        (1009, decode_array(lambda v: v)),  # text[]
-        (1082, date.fromisoformat),         # date
-        (1700, Decimal),                    # numeric
-        (3802, json_loads),                 # jsonb
+        (None, lambda _: None),                  # null
+        (20, int),                               # int8
+        (23, int),                               # int4
+        (25, lambda v: v),                       # text
+        (114, json_loads),                       # json
+        (1007, get_array_decoder(int)),          # int4[]
+        (1009, get_array_decoder(lambda v: v)),  # text[]
+        (1082, date.fromisoformat),              # date
+        (1700, Decimal),                         # numeric
+        (3802, json_loads),                      # jsonb
     )
 
 
-def decode_array(value_decoder):
+def get_array_decoder(value_decoder):
     OUT = object()
     IN_UNQUOTED = object()
     IN_QUOTED = object()
