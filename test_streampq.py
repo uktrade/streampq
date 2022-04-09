@@ -54,14 +54,14 @@ def test_literals(params):
         results = tuple(
             (cols, tuple(rows))
             for cols, rows in query(sql, literals=(
-                ('first', '1'),
+                ('first', '🍰'),
                 ('second', 'an\'"other'),
             ))
         )
 
     assert results == (
         (('first', 'second'),
-        (('1', 'an\'"other'),)),
+        (('🍰', 'an\'"other'),)),
     )
 
 
@@ -73,13 +73,13 @@ def test_identifiers(params):
         results = tuple(
             (cols, tuple(rows))
             for cols, rows in query(sql, identifiers=(
-                ('first', '1'),
+                ('first', '🍰'),
                 ('second', 'an\'"other'),
             ))
         )
 
     assert results == (
-        (('1', 'an\'"other'),
+        (('🍰', 'an\'"other'),
         (('first', 'second'),)),
     )
 
