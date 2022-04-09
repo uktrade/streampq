@@ -78,15 +78,15 @@ def streampq_connect(
         try:
             conn = pq.PQconnectdbParams(keywords, values, 0)
             if not conn:
-                raise StreamPQError()
+                raise ConnectionError()
 
             status = pq.PQstatus(conn)
             if status:
-                raise StreamPQError(pq.PQerrorMessage(conn))
+                raise ConnectionError(pq.PQerrorMessage(conn))
 
             ok = pq.PQsetnonblocking(conn, 1)
             if ok != 0:
-                raise StreamPQError(pq.PQerrorMessage(conn))
+                raise ConnectionError(pq.PQerrorMessage(conn))
 
             socket = pq.PQsocket(conn)
             sel = DefaultSelector()
@@ -274,6 +274,10 @@ def _array(encoder):
 
 
 class StreamPQError(Exception):
+    pass
+
+
+class ConnectionError(StreamPQError):
     pass
 
 

@@ -8,7 +8,7 @@ import os
 
 import pytest
 
-from streampq import streampq_connect, QueryError
+from streampq import streampq_connect, ConnectionError, QueryError
 
 
 @pytest.fixture
@@ -20,6 +20,12 @@ def params():
         ('user', 'postgres'),
         ('password', 'password'),
     )
+
+
+def test_connection_error(params):
+    with pytest.raises(ConnectionError, match='could not translate host name "does-not-exist" to address'):
+        streampq_connect((('host', 'does-not-exist'),)).__enter__()
+
 
 
 def test_multiple_queries(params):

@@ -64,6 +64,10 @@ Exceptions derive from `streampq.StreamPQError`. If there is any more informatio
 
     Base class for all explicitly-thrown exceptions
 
+    - **ConnectionError**
+
+      An error occurred while attempting to connect to the database.
+
     - **QueryError**
 
       An error occurred while attempting to run a query. Typically this is due to a syntax error or a missing column.
