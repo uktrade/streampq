@@ -240,3 +240,18 @@ def test_keyboard_interrupt(params, signal_type, exception_type):
                 count = row[0]
 
     assert count == 0
+
+
+def test_series(params):
+    sql = '''
+        SELECT * FROM generate_series(1,10000000);
+    '''
+
+    count = 0
+
+    with streampq_connect(params) as query:
+        for cols, rows in query(sql):
+            for row in rows:
+                count += 1
+
+    assert count == 10000000
