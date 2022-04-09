@@ -4,9 +4,9 @@ Stream results of multi-statement PostgreSQL queries from Python without server-
 
 - Streams results from complex multi-statement queries even though SQL doesn't allow server-side cursors for such queries - suitable for large amounts of results that don't fit in memory.
 
-- CTRL+C (SIGINT) by default behaves as expected during queries - a `KeyboardInterrupt` is raised will exit the program.
+- CTRL+C (SIGINT) by default behaves as expected event during slow queries - a `KeyboardInterrupt` is raised it quickly bubbles up through streampq code, and unless client code prevents it, the program will exit.
 
-- By default every effort is made to cancel dueries on CTRL+C or errors - the server doesn't continue needlessly using resources.
+- Every effort is made to cancel dueries on `KeyboardInterrupt`, `SystemExit`, or errors - the server doesn't continue needlessly using resources.
 
 
 ## Installation
