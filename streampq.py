@@ -4,7 +4,7 @@ from decimal import Decimal
 from functools import partial
 from json import loads as json_loads
 from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
-from ctypes import cdll, create_string_buffer, byref, c_char_p, c_void_p, c_int
+from ctypes import cdll, create_string_buffer, byref, cast, c_char_p, c_void_p, c_int, c_size_t
 from ctypes.util import find_library
 from itertools import groupby
 
@@ -33,6 +33,10 @@ def streampq_connect(
     pq.PQgetCancel.restype = c_void_p
     pq.PQcancel.argtypes = (c_void_p, c_char_p, c_int)
     pq.PQfreeCancel.argtypes = (c_void_p,)
+
+    pq.PQescapeLiteral.argtypes = (c_void_p, c_char_p, c_size_t)
+    pq.PQescapeLiteral.restype = c_void_p
+    pq.PQfreemem.argtypes = (c_void_p,)
 
     pq.PQsendQuery.argtypes = (c_void_p, c_char_p)
     pq.PQsetSingleRowMode.argtypes = (c_void_p,)
@@ -141,8 +145,20 @@ def streampq_connect(
             if not ok:
                 raise CommunicationError(pq.PQerrorMessage(conn))
 
-    def query(sel, socket, conn, sql):
-        ok = pq.PQsendQuery(conn, sql.encode('utf-8'));
+    def escape_literal(conn, string):
+        string_encoded = string.encode('utf-8')
+        escaped = None
+        try:
+            escaped = pq.PQescapeLiteral(conn, string_encoded, len(string_encoded))
+            if not escaped:
+                raise StreamPQError(pq.PQerrorMessage(conn))
+            return cast(escaped, c_char_p).value.decode('utf-8')
+        finally:
+            pq.PQfreemem(escaped)
+
+    def query(sel, socket, conn, sql, literals=()):
+        escaped_literals = tuple(escape_literal(conn, literal) for literal in literals)
+        ok = pq.PQsendQuery(conn, sql.format(*escaped_literals).encode('utf-8'));
         if not ok:
             raise CommunicationError(pq.PQerrorMessage(conn))
 

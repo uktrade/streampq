@@ -46,6 +46,22 @@ def test_multiple_queries(params):
     )
 
 
+def test_literals(params):
+    sql = '''
+        SELECT {} as "first", {} as "second";
+    '''
+    with streampq_connect(params) as query:
+        results = tuple(
+            (cols, tuple(rows))
+            for cols, rows in query(sql, literals=('1', 'an\'"other'))
+        )
+
+    assert results == (
+        (('first', 'second'),
+        (('1', 'an\'"other'),)),
+    )
+
+
 def test_types(params):
     sql_to_python_mapping = (
         ("NULL", None),
@@ -54,14 +70,14 @@ def test_types(params):
         ("'🍰'", '🍰'),
         ("3.3", Decimal('3.3')),
         ("'2021-01-01'::date", date(2021, 1, 1)),
-        ("'{\"a\":2}'::jsonb", {'a': 2}),
-        ("'{\"b\":2}'::json", {'b': 2}),
-        ("'{\"one \\\"and\",\"2\"}'::text[]", ('one "and', '2')),
-        ("'{\"NULL\"}'::text[]", ('NULL',)),
-        ("'{{{1,2},{1,2}},{{1,2},{1,2}}}'::int4[]", (((1,2),(1,2)),((1,2),(1,2)))),
-        ("'{NULL}'::int4[]", (None,)),
+        ("'{{\"a\":2}}'::jsonb", {'a': 2}),
+        ("'{{\"b\":2}}'::json", {'b': 2}),
+        ("'{{\"one \\\"and\",\"2\"}}'::text[]", ('one "and', '2')),
+        ("'{{\"NULL\"}}'::text[]", ('NULL',)),
+        ("'{{{{{{1,2}},{{1,2}}}},{{{{1,2}},{{1,2}}}}}}'::int4[]", (((1,2),(1,2)),((1,2),(1,2)))),
+        ("'{{NULL}}'::int4[]", (None,)),
         ("NULL::int4[]", None),
-        ("'{}'::int4[]", ()),
+        ("'{{}}'::int4[]", ()),
     )
     with streampq_connect(params) as query:
         results = tuple(
