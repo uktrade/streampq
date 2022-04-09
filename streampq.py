@@ -207,20 +207,20 @@ def streampq_connect(
 
 def get_default_decoders():
     return (
-        (None, lambda _: None),       # null
-        (20, int),                    # int8
-        (23, int),                    # int4
-        (25, lambda v: v),            # text
-        (114, json_loads),            # json
-        (1007, _array(int)),          # int4[]
-        (1009, _array(lambda v: v)),  # text[]
-        (1082, date.fromisoformat),   # date
-        (1700, Decimal),              # numeric
-        (3802, json_loads),           # jsonb
+        (None, lambda _: None),             # null
+        (20, int),                          # int8
+        (23, int),                          # int4
+        (25, lambda v: v),                  # text
+        (114, json_loads),                  # json
+        (1007, decode_array(int)),          # int4[]
+        (1009, decode_array(lambda v: v)),  # text[]
+        (1082, date.fromisoformat),         # date
+        (1700, Decimal),                    # numeric
+        (3802, json_loads),                 # jsonb
     )
 
 
-def _array(decoder):
+def decode_array(value_decoder):
     OUT = object()
     IN_UNQUOTED = object()
     IN_QUOTED = object()
@@ -248,13 +248,13 @@ def _array(decoder):
                 if c == '}':
                     value_str = ''.join(value)
                     value = []
-                    stack[-1].append(None if value_str == 'NULL' else decoder(value_str))
+                    stack[-1].append(None if value_str == 'NULL' else value_decoder(value_str))
                     stack[-2].append(tuple(stack.pop()))
                     state = OUT
                 elif c == ',':
                     value_str = ''.join(value)
                     value = []
-                    stack[-1].append(None if value_str == 'NULL' else decoder(value_str))
+                    stack[-1].append(None if value_str == 'NULL' else value_decoder(value_str))
                     state = OUT
                 else:
                     value.append(c)
@@ -262,7 +262,7 @@ def _array(decoder):
                 if c == '"':
                     value_str = ''.join(value)
                     value = []
-                    stack[-1].append(decoder(value_str))
+                    stack[-1].append(value_decoder(value_str))
                     state = OUT
                 elif c == '\\':
                     state = IN_QUOTED_ESCAPE
