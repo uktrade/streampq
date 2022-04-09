@@ -93,6 +93,7 @@ def test_identifier_escaping(params):
     ("'🍰'", '🍰'),
     ("3.3", Decimal('3.3')),
     ("'2021-01-01'::date", date(2021, 1, 1)),
+    ("'2021-01-01'::timestamp", datetime(2021, 1, 1)),
     ("'{{\"a\":2}}'::jsonb", {'a': 2}),
     ("'{{\"b\":2}}'::json", {'b': 2}),
     ("'{{\"one \\\"and\",\"2\"}}'::text[]", ('one "and', '2')),
