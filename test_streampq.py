@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from multiprocessing import Process, Event
 from time import sleep
@@ -121,6 +121,7 @@ def test_decoders(params, sql_value, python_value):
     (3.3, '3.3'),
     (Decimal('3.3'), '3.3'),
     (date(2021, 1, 1), '2021-01-01'),
+    (datetime(2021, 1, 1), '2021-01-01 00:00:00'),
     (Exception, "<class 'Exception'>"),  # No encoder specified so defaults to str
 ])
 def test_encoders(params, python_value, sql_value_as_python):
