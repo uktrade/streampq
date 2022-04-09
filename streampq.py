@@ -39,10 +39,12 @@ def streampq_connect(
     pq.PQisBusy.argtypes = (c_void_p,)
     pq.PQfinish.argtypes = (c_void_p,)
     pq.PQstatus.argtypes = (c_void_p,)
+
     pq.PQgetCancel.argtypes = (c_void_p,)
     pq.PQgetCancel.restype = c_void_p
     pq.PQcancel.argtypes = (c_void_p, c_char_p, c_int)
     pq.PQfreeCancel.argtypes = (c_void_p,)
+
     pq.PQsendQuery.argtypes = (c_void_p, c_char_p)
     pq.PQsetSingleRowMode.argtypes = (c_void_p,)
     pq.PQgetResult.argtypes = (c_void_p,)
