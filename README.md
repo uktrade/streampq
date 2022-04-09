@@ -42,12 +42,15 @@ connection_params = (
 
 # SQL statement(s) - if more than one, separate by ;
 sql = '''
-SELECT * FROM my_table;
-SELECT * FROM my_other_table;
+SELECT * FROM my_table WHERE my_col = {first};
+SELECT * FROM my_other_table WHERE my_other_col = {second};
 '''
 
 with streampq_connect(connection_params) as query:
-    for (columns, rows) in query(sql):
+    for (columns, rows) in query(sql, literals=(
+        ('first', 'a value'),
+        ('second', 'another value'),
+    )):
         for row in rows:
             pass
 ```
