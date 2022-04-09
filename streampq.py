@@ -129,7 +129,7 @@ def streampq_connect(
         while True:
             incomplete = pq.PQflush(conn)
             if incomplete == -1:
-                raise StreamPQError(pq.PQerrorMessage(conn))
+                raise CommunicationError(pq.PQerrorMessage(conn))
             if not incomplete:
                 break
             ready_for = block_until(sel, socket, (EVENT_WRITE, EVENT_READ))
@@ -138,7 +138,7 @@ def streampq_connect(
             if ready_for == EVENT_READ:
                 ok = PQconsumeInput(conn)
                 if not ok:
-                    raise StreamPQError(pq.PQerrorMessage(conn))
+                    raise CommunicationError(pq.PQerrorMessage(conn))
 
         block_until(sel, socket, (EVENT_READ,))
 
@@ -150,18 +150,18 @@ def streampq_connect(
             block_until(sel, socket, (EVENT_READ,))
             ok = pq.PQconsumeInput(conn)
             if not ok:
-                raise StreamPQError(pq.PQerrorMessage(conn))
+                raise CommunicationError(pq.PQerrorMessage(conn))
 
     def query(sel, socket, conn, sql):
         ok = pq.PQsendQuery(conn, sql.encode('utf-8'));
         if not ok:
-            raise StreamPQError(pq.PQerrorMessage(conn))
+            raise CommunicationError(pq.PQerrorMessage(conn))
 
         flush_write(sel, socket, conn)
 
         ok = pq.PQsetSingleRowMode(conn);
         if not ok:
-            raise StreamPQError(pq.PQerrorMessage(conn))
+            raise CommunicationError(pq.PQerrorMessage(conn))
 
         def get_results():
             # So we can use groupby to separate rows for different statements
@@ -286,4 +286,8 @@ class QueryError(StreamPQError):
 
 
 class CancelError(StreamPQError):
+    pass
+
+
+class CommunicationError(StreamPQError):
     pass

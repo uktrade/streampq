@@ -75,3 +75,7 @@ Exceptions derive from `streampq.StreamPQError`. If there is any more informatio
     - **CancelError**
 
       An error occurred while attempting to cancel a query.
+
+    - **CommunicationError**
+
+      An error occurred communicating with the database after successful connection.
