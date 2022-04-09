@@ -238,6 +238,7 @@ def get_default_encoders():
 def get_default_decoders():
     return (
         (None, lambda _: None),                  # null
+        (16, lambda v: v == 't'),                # bool
         (20, int),                               # int8
         (23, int),                               # int4
         (25, lambda v: v),                       # text

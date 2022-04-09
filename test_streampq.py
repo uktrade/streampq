@@ -86,6 +86,8 @@ def test_identifier_escaping(params):
 
 @pytest.mark.parametrize("sql_value,python_value", [
     ("NULL", None),
+    ("TRUE", True),
+    ("FALSE", False),
     ("1", 1),
     ("1::int8", 1),
     ("'🍰'", '🍰'),
