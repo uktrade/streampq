@@ -8,7 +8,7 @@ import os
 
 import pytest
 
-from streampq import streampq_connect
+from streampq import streampq_connect, StreamPQError
 
 
 @pytest.fixture
@@ -74,7 +74,7 @@ def test_syntax_error(params):
         SELECTa;
     '''
     with streampq_connect(params) as query:
-        with pytest.raises(Exception):
+        with pytest.raises(StreamPQError):
             next(iter(query(sql)))
 
 
@@ -87,7 +87,7 @@ def test_missing_column(params):
         results = iter(query(sql))
         _, rows = next(results)
         next(rows)
-        with pytest.raises(Exception):
+        with pytest.raises(StreamPQError):
             next(rows)
 
 

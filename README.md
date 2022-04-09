@@ -51,3 +51,8 @@ with streampq_connect(connection_params) as query:
         for row in rows:
             pass
 ```
+
+
+## Exceptions
+
+Exceptions derive from `streampq.StreamPQError`

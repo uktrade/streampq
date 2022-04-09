@@ -73,15 +73,15 @@ def streampq_connect(
         try:
             conn = pq.PQconnectdbParams(keywords, values, 0)
             if not conn:
-                raise Exception()
+                raise StreamPQError()
 
             status = pq.PQstatus(conn)
             if status:
-                raise Exception()
+                raise StreamPQError()
 
             ok = pq.PQsetnonblocking(conn, 1)
             if ok != 0:
-                raise Exception()
+                raise StreamPQError()
 
             socket = pq.PQsocket(conn)
             sel = DefaultSelector()
@@ -98,11 +98,11 @@ def streampq_connect(
             try:
                 pg_cancel = pq.PQgetCancel(conn)
                 if not pg_cancel:
-                    raise Exception()
+                    raise StreamPQError()
                 buf = create_string_buffer(256)
                 ok = pq.PQcancel(pg_cancel, buf, 256)
                 if not ok:
-                    raise Exception(buf.raw.rstrip(b'\x00').decode('utf-8'))
+                    raise StreamPQError(buf.raw.rstrip(b'\x00').decode('utf-8'))
             finally:
                 pq.PQfreeCancel(pg_cancel)
 
@@ -124,7 +124,7 @@ def streampq_connect(
         while True:
             incomplete = pq.PQflush(conn)
             if incomplete == -1:
-                raise Exception()
+                raise StreamPQError()
             if not incomplete:
                 break
             ready_for = block_until(sel, socket, (EVENT_WRITE, EVENT_READ))
@@ -133,7 +133,7 @@ def streampq_connect(
             if ready_for == EVENT_READ:
                 ok = PQconsumeInput(conn)
                 if not ok:
-                    raise Exception()
+                    raise StreamPQError()
 
         block_until(sel, socket, (EVENT_READ,))
 
@@ -145,18 +145,18 @@ def streampq_connect(
             block_until(sel, socket, (EVENT_READ,))
             ok = pq.PQconsumeInput(conn)
             if not ok:
-                raise Exception()
+                raise StreamPQError()
 
     def query(sel, socket, conn, sql):
         ok = pq.PQsendQuery(conn, sql.encode('utf-8'));
         if not ok:
-            raise Exception()
+            raise StreamPQError()
 
         flush_write(sel, socket, conn)
 
         ok = pq.PQsetSingleRowMode(conn);
         if not ok:
-            raise Exception()
+            raise StreamPQError()
 
         def get_results():
             # So we can use groupby to separate rows for different statements
@@ -176,7 +176,7 @@ def streampq_connect(
                         continue
 
                     if status != PGRES_SINGLE_TUPLE:
-                        raise Exception(status)
+                        raise StreamPQError(status)
 
                     num_columns = pq.PQnfields(result)
                     columns = tuple(
@@ -266,3 +266,7 @@ def _array(encoder):
         return stack[0][0]
 
     return parse
+
+
+class StreamPQError(Exception):
+    pass
