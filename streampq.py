@@ -257,6 +257,7 @@ def get_default_decoders():
         (1007, get_array_decoder(int)),                              # int4[]
         (1009, get_array_decoder(lambda v: v)),                      # text[]
         (1114, lambda v: datetime.strptime(v, '%Y-%m-%d %H:%M:%S')), # timestamp
+        (1015, get_array_decoder(lambda v: v)),                      # varchar[]
         (1082, date.fromisoformat),                                  # date
         (1700, Decimal),                                             # numeric
         (3802, json_loads),                                          # jsonb
