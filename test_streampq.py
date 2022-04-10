@@ -323,3 +323,31 @@ def test_notice(params):
                 count += 1
 
     assert count == 100001
+
+
+def test_incomplete_iteration(params):
+    # Not completely sure if this is desired or not - if calling
+    # code doesn't complete iteration of results of an individual
+    # statment, then the groupby under the hood seems to continue
+    # to iterate through all its remaining results, which means
+    # results continue to be fetched from the server
+
+    sql = '''
+        SELECT a, b
+        FROM (
+            values ('foo', 1), ('bar',2 )
+        ) s(a,b);
+        SELECT a
+        FROM (
+            values ('foo'), ('bar')
+        ) s(a);
+    '''
+
+    count = 0
+    with streampq_connect(params) as query:
+        all_results = query(sql)
+        next(all_results)
+        cols, rows = next(all_results)
+        second_query_results = tuple(rows)
+
+    assert second_query_results == (('foo',), ('bar',))
