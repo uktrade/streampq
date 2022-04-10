@@ -131,8 +131,6 @@ def streampq_connect(
             if not incomplete:
                 break
             ready_for = block_until(sel, socket, (EVENT_WRITE, EVENT_READ))
-            if ready_for == EVENT_WRITE:
-                continue
             if ready_for == EVENT_READ:
                 ok = PQconsumeInput(conn)
                 if not ok:
