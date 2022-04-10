@@ -301,7 +301,7 @@ def test_series(params):
 
 
 def test_notice(params):
-    notice = f'NOTICE--' * 1000
+    notice = f'NOTICE--' * 10000
     sql = f'''
         CREATE OR REPLACE FUNCTION r(i integer) RETURNS integer AS $$
         BEGIN
