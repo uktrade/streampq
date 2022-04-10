@@ -265,6 +265,26 @@ def test_temporary_table(params):
     )
 
 
+def test_empty_queries_among_others(params):
+    sql = '''
+        ;;
+        SELECT 1 as "col"
+        ;; ;;;
+        SELECT 2 as "col"
+    '''
+
+    with streampq_connect(params) as query:
+        results = tuple(
+            (cols, tuple(rows))
+            for cols, rows in query(sql)
+        )
+
+    assert results == (
+        (('col',), ((1,),)),
+        (('col',), ((2,),)),
+    )
+
+
 def test_series(params):
     sql = '''
         SELECT * FROM generate_series(1,10000000);
