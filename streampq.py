@@ -59,6 +59,7 @@ def streampq_connect(
     pq.PQerrorMessage.argtypes = (c_void_p,)
     pq.PQerrorMessage.restype = c_char_p
 
+    PGRES_COMMAND_OK = 1
     PGRES_TUPLES_OK = 2
     PGRES_SINGLE_TUPLE = 9
 
@@ -195,7 +196,7 @@ def streampq_connect(
                         break
 
                     status = pq.PQresultStatus(result)
-                    if status == PGRES_TUPLES_OK:
+                    if status in (PGRES_COMMAND_OK, PGRES_TUPLES_OK):
                         group_key = object()
                         continue
 

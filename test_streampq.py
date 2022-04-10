@@ -242,6 +242,29 @@ def test_keyboard_interrupt(params, signal_type, exception_type):
     assert count == 0
 
 
+def test_temporary_table(params):
+    sql = '''
+        CREATE TEMPORARY TABLE my_temp_table AS SELECT a, b
+        FROM (
+            values ('foo', 1), ('bar',2 ), ('baz', 3)
+        ) s(a,b);
+        SELECT * FROM my_temp_table;
+    '''
+
+    with streampq_connect(params) as query:
+        results = tuple(
+            (cols, tuple(rows))
+            for cols, rows in query(sql)
+        )
+
+    assert results == (
+        (
+            ('a', 'b'),
+            (('foo', 1), ('bar', 2), ('baz', 3)),
+        ),
+    )
+
+
 def test_series(params):
     sql = '''
         SELECT * FROM generate_series(1,10000000);
