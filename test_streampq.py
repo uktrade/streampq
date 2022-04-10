@@ -298,3 +298,27 @@ def test_series(params):
                 count += 1
 
     assert count == 10000000
+
+
+def test_notice(params):
+    sql = '''
+        CREATE OR REPLACE FUNCTION r(i integer) RETURNS integer AS $$
+        BEGIN
+            FOR i IN 1..100000 LOOP
+                RAISE notice 'A notice';
+            END LOOP;
+            RETURN i + 1;
+        END;
+        $$ LANGUAGE plpgsql;
+        SELECT r(1);
+        SELECT * FROM generate_series(1,100000);
+    '''
+
+    count = 0
+
+    with streampq_connect(params) as query:
+        for cols, rows in query(sql):
+            for row in rows:
+                count += 1
+
+    assert count == 100001
