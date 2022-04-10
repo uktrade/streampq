@@ -325,7 +325,7 @@ def test_notice(params):
     assert count == 100001
 
 
-def test_incomplete_iteration(params):
+def test_incomplete_iteration_same_query(params):
     # Not completely sure if this is desired or not - if calling
     # code doesn't complete iteration of results of an individual
     # statment, then the groupby under the hood seems to continue
@@ -351,3 +351,24 @@ def test_incomplete_iteration(params):
         second_query_results = tuple(rows)
 
     assert second_query_results == (('foo',), ('bar',))
+
+
+def test_incomplete_iteration_different_query(params):
+    # Not completely sure if this is desired or not - should the
+    # existing command be cancelled and the new one allowed to run?
+
+    sql = '''
+        SELECT a, b
+        FROM (
+            values ('foo', 1), ('bar',2 )
+        ) s(a,b);
+    '''
+
+    count = 0
+    with streampq_connect(params) as query:
+        all_results = query(sql)
+        cols, rows = next(all_results)
+        next(rows)
+
+        with pytest.raises(QueryError, match='another command is already in progress'):
+            query(sql)

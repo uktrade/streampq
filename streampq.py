@@ -80,11 +80,11 @@ def streampq_connect(
 
             status = pq.PQstatus(conn)
             if status:
-                raise ConnectionError(pq.PQerrorMessage(conn))
+                raise ConnectionError(pq.PQerrorMessage(conn).decode('utf-8'))
 
             ok = pq.PQsetnonblocking(conn, 1)
             if ok != 0:
-                raise ConnectionError(pq.PQerrorMessage(conn))
+                raise ConnectionError(pq.PQerrorMessage(conn).decode('utf-8'))
 
             socket = pq.PQsocket(conn)
             sel = DefaultSelector()
@@ -101,7 +101,7 @@ def streampq_connect(
             try:
                 pg_cancel = pq.PQgetCancel(conn)
                 if not pg_cancel:
-                    raise CancelError(pq.PQerrorMessage(conn))
+                    raise CancelError(pq.PQerrorMessage(conn).decode('utf-8'))
                 buf = create_string_buffer(256)
                 ok = pq.PQcancel(pg_cancel, buf, 256)
                 if not ok:
@@ -127,14 +127,14 @@ def streampq_connect(
         while True:
             incomplete = pq.PQflush(conn)
             if incomplete == -1:
-                raise CommunicationError(pq.PQerrorMessage(conn))
+                raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
             if not incomplete:
                 break
             ready_for = block_until(sel, socket, (EVENT_WRITE, EVENT_READ))
             if ready_for == EVENT_READ:
                 ok = PQconsumeInput(conn)
                 if not ok:
-                    raise CommunicationError(pq.PQerrorMessage(conn))
+                    raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
 
         block_until(sel, socket, (EVENT_READ,))
 
@@ -146,7 +146,7 @@ def streampq_connect(
             block_until(sel, socket, (EVENT_READ,))
             ok = pq.PQconsumeInput(conn)
             if not ok:
-                raise CommunicationError(pq.PQerrorMessage(conn))
+                raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
 
     def escape(conn, value, func, allow_unescaped):
         must_escape, encoder = encoders_dict.get(type(value), (True, str))
@@ -158,7 +158,7 @@ def streampq_connect(
         try:
             escaped_p = func(conn, string_encoded_bytes, len(string_encoded_bytes))
             if not escaped_p:
-                raise StreamPQError(pq.PQerrorMessage(conn))
+                raise StreamPQError(pq.PQerrorMessage(conn).decode('utf-8'))
             escaped_str = cast(escaped_p, c_char_p).value.decode('utf-8')
         finally:
             pq.PQfreemem(escaped_p)
@@ -171,13 +171,13 @@ def streampq_connect(
             tuple((key, escape(conn, value, pq.PQescapeIdentifier, False)) for key, value in identifiers)
         )).encode('utf-8'));
         if not ok:
-            raise CommunicationError(pq.PQerrorMessage(conn))
+            raise QueryError(pq.PQerrorMessage(conn).decode('utf-8'))
 
         flush_write(sel, socket, conn)
 
         ok = pq.PQsetSingleRowMode(conn);
         if not ok:
-            raise CommunicationError(pq.PQerrorMessage(conn))
+            raise QueryError(pq.PQerrorMessage(conn).decode('utf-8'))
 
         def get_results():
             # So we can use groupby to separate rows for different statements
@@ -199,7 +199,7 @@ def streampq_connect(
                         continue
 
                     if status != PGRES_SINGLE_TUPLE:
-                        raise QueryError(pq.PQerrorMessage(conn))
+                        raise QueryError(pq.PQerrorMessage(conn).decode('utf-8'))
 
                     num_columns = pq.PQnfields(result)
                     columns = tuple(
