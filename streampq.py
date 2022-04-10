@@ -139,7 +139,7 @@ def streampq_connect(
                 break
             ready_for = block_until(sel, socket, (EVENT_WRITE, EVENT_READ))
             if ready_for == EVENT_READ:
-                ok = PQconsumeInput(conn)
+                ok = pq.PQconsumeInput(conn)
                 if not ok:
                     raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
 

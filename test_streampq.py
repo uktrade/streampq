@@ -325,6 +325,27 @@ def test_notice(params):
     assert count == 100001
 
 
+def test_sending_notify_from_another_connection(params):
+    string = '-' * 100_000_000
+    sql = f'''
+        SELECT '{string}'
+    '''
+
+    with \
+            streampq_connect(params) as query_1, \
+            streampq_connect(params) as query_2:
+
+        list(query_1('LISTEN channel'))
+        for _ in range(0, 1000):
+            list(query_2(f"NOTIFY channel, '{'-' * 1000}'"))
+
+        for columns, rows in query_1(sql):
+            for row in rows:
+                returned_string = row[0]
+
+    assert string == returned_string
+
+
 def test_incomplete_iteration_same_query(params):
     # Not completely sure if this is desired or not - if calling
     # code doesn't complete iteration of results of an individual
