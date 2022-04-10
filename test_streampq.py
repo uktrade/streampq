@@ -301,11 +301,12 @@ def test_series(params):
 
 
 def test_notice(params):
-    sql = '''
+    notice = f'NOTICE--' * 1000
+    sql = f'''
         CREATE OR REPLACE FUNCTION r(i integer) RETURNS integer AS $$
         BEGIN
-            FOR i IN 1..100000 LOOP
-                RAISE notice 'A notice';
+            FOR i IN 1..10000 LOOP
+                RAISE notice '{notice}';
             END LOOP;
             RETURN i + 1;
         END;
