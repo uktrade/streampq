@@ -336,7 +336,7 @@ def test_sending_notify_from_another_connection(params):
             streampq_connect(params) as query_2:
 
         list(query_1('LISTEN channel'))
-        for _ in range(0, 1000):
+        for _ in range(0, 10000):
             list(query_2(f"NOTIFY channel, '{'-' * 1000}'"))
 
         for columns, rows in query_1(sql):
