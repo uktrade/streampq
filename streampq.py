@@ -94,20 +94,27 @@ def streampq_connect(
 
     @contextmanager
     def cancel_query(sel, socket, conn):
+        query_running = False
+
+        def set_needs_cancel(new_query_running):
+            nonlocal query_running
+            query_running = new_query_running
+
         try:
-            yield
+            yield set_needs_cancel
         finally:
-            pg_cancel = c_void_p(0)
-            try:
-                pg_cancel = pq.PQgetCancel(conn)
-                if not pg_cancel:
-                    raise CancelError(pq.PQerrorMessage(conn).decode('utf-8'))
-                buf = create_string_buffer(256)
-                ok = pq.PQcancel(pg_cancel, buf, 256)
-                if not ok:
-                    raise CancelError(buf.raw.rstrip(b'\x00').decode('utf-8'))
-            finally:
-                pq.PQfreeCancel(pg_cancel)
+            if query_running:
+                pg_cancel = c_void_p(0)
+                try:
+                    pg_cancel = pq.PQgetCancel(conn)
+                    if not pg_cancel:
+                        raise CancelError(pq.PQerrorMessage(conn).decode('utf-8'))
+                    buf = create_string_buffer(256)
+                    ok = pq.PQcancel(pg_cancel, buf, 256)
+                    if not ok:
+                        raise CancelError(buf.raw.rstrip(b'\x00').decode('utf-8'))
+                finally:
+                    pq.PQfreeCancel(pg_cancel)
 
     # Blocking using select rather than in libpq allows signals to be caught by Python.
     # Notably SIGINT will result in a KeyboardInterrupt as expected
@@ -165,7 +172,9 @@ def streampq_connect(
 
         return escaped_str
 
-    def query(sel, socket, conn, sql, literals=(), identifiers=()):
+    def query(sel, socket, conn, set_query_running, sql, literals=(), identifiers=()):
+        set_query_running(True)
+
         ok = pq.PQsendQuery(conn, sql.format(**dict(
             tuple((key, escape(conn, value, pq.PQescapeLiteral, True)) for key, value in literals) +
             tuple((key, escape(conn, value, pq.PQescapeIdentifier, False)) for key, value in identifiers)
@@ -218,6 +227,8 @@ def streampq_connect(
                     pq.PQclear(result)
                     result = c_void_p(0)
 
+            set_query_running(False)
+
         def get_columns(grouped_results):
             for (_, columns), rows in grouped_results:
                 yield columns, (row[1] for row in rows)
@@ -230,9 +241,9 @@ def streampq_connect(
 
     with \
             get_conn() as (sel, socket, conn), \
-            cancel_query(sel, socket, conn):
+            cancel_query(sel, socket, conn) as set_query_running:
 
-        yield partial(query, sel, socket, conn)
+        yield partial(query, sel, socket, conn, set_query_running)
 
 
 def get_default_encoders():
