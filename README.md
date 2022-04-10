@@ -8,7 +8,7 @@ Stream results of multi-statement PostgreSQL queries from Python without server-
 
 - Every effort is made to cancel queries on `KeyboardInterrupt`, `SystemExit`, or errors - the server doesn't continue needlessly using resources.
 
-Particularly useful when temporary tables are needed to store intermediate results.
+Particularly useful when temporary tables are needed to store intermediate results in multi-statement SQL scripts.
 
 
 ## Installation
