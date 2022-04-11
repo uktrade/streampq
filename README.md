@@ -93,6 +93,11 @@ with streampq_connect(connection_params) as query:
 Identifiers and literals use different escaping rules - hence the need for 2 different parameters.
 
 
+### Single-statement SQL queries
+
+While this library is specialsed for multi-statement queries, it works fine when there is only one. In this case the iterable returned from the query function yields only a single `(columns, rows)` pair.
+
+
 ## Exceptions
 
 Exceptions derive from `streampq.StreamPQError`. If there is any more information available on the error, it's added as a string in its `args` property. This is included in the string representation of the exception by default.
