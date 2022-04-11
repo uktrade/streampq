@@ -28,6 +28,26 @@ def test_connection_error(params):
         streampq_connect((('host', 'does-not-exist'),)).__enter__()
 
 
+def test_multiple_queries_with_params_from_iterable(params):
+    sql = '''
+        SELECT 1 as "first";
+        SELECT 2,'3';
+    '''
+
+    def params_it():
+        yield from dict(params).items()
+
+    with streampq_connect(params_it()) as query:
+        results = tuple(
+            (cols, tuple(rows))
+            for cols, rows in query(sql)
+        )
+
+    assert results == (
+        (('first',), ((1,),)),
+        (('?column?','?column?'), ((2,'3'),)),
+    )
+
 
 def test_multiple_queries(params):
     sql = '''

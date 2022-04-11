@@ -67,8 +67,9 @@ def streampq_connect(
         char_ps = tuple(c_char_p(string.encode('utf-8')) for string in strings) + (None,)
         return (c_char_p * len(char_ps))(*char_ps)
 
-    keywords = as_null_terminated_array((param[0] for param in params))
-    values = as_null_terminated_array((param[1] for param in params))
+    params_tuple = tuple(params)
+    keywords = as_null_terminated_array((key for key, value in params_tuple))
+    values = as_null_terminated_array((value for key, value in params_tuple))
 
     @contextmanager
     def get_conn():
