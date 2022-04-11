@@ -44,18 +44,53 @@ connection_params = (
 
 # SQL statement(s) - if more than one, separate by ;
 sql = '''
-SELECT * FROM my_table WHERE my_col = {first};
-SELECT * FROM my_other_table WHERE my_other_col = {second};
+SELECT * FROM my_table;
+SELECT * FROM my_other_table;
+'''
+
+with streampq_connect(connection_params) as query:
+    for (columns, rows) in query(sql):
+        for row in rows:
+            pass
+```
+
+
+### Bind parameters - literals
+
+Dynamic SQL literals can be bound using the `literals` parameter of the query function. It must be an iterable of key-value pairs.
+
+```python
+sql = '''
+SELECT * FROM my_table WHERE my_col = {my_col_value};
 '''
 
 with streampq_connect(connection_params) as query:
     for (columns, rows) in query(sql, literals=(
-        ('first', 'a value'),
-        ('second', 'another value'),
+        ('my_col_value', 'my-value'),
     )):
         for row in rows:
             pass
 ```
+
+
+### Bind parameters - identifiers
+
+Dynamic SQL identifiers, e.g. column names, can be bound using the `identifiers` parameter of the query function. It must be an iterable of key-value pairs.
+
+```python
+sql = '''
+SELECT * FROM my_table WHERE {column_name} = 'my-value';
+'''
+
+with streampq_connect(connection_params) as query:
+    for (columns, rows) in query(sql, identifiers=(
+        ('column_name', 'my_col'),
+    )):
+        for row in rows:
+            pass
+```
+
+Identifiers and literals use different escaping rules - hence the need for 2 different parameters.
 
 
 ## Exceptions
