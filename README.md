@@ -44,8 +44,8 @@ connection_params = (
 
 # SQL statement(s) - if more than one, separate by ;
 sql = '''
-SELECT * FROM my_table;
-SELECT * FROM my_other_table;
+    SELECT * FROM my_table;
+    SELECT * FROM my_other_table;
 '''
 
 # Connection and querying is via a context manager
@@ -63,7 +63,7 @@ Dynamic SQL literals can be bound using the `literals` parameter of the query fu
 
 ```python
 sql = '''
-SELECT * FROM my_table WHERE my_col = {my_col_value};
+    SELECT * FROM my_table WHERE my_col = {my_col_value};
 '''
 
 with streampq_connect(connection_params) as query:
@@ -81,7 +81,7 @@ Dynamic SQL identifiers, e.g. column names, can be bound using the `identifiers`
 
 ```python
 sql = '''
-SELECT * FROM my_table WHERE {column_name} = 'my-value';
+    SELECT * FROM my_table WHERE {column_name} = 'my-value';
 '''
 
 with streampq_connect(connection_params) as query:
