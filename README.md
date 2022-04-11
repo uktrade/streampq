@@ -48,10 +48,12 @@ SELECT * FROM my_table;
 SELECT * FROM my_other_table;
 '''
 
+# Connection and querying is via a context manager
 with streampq_connect(connection_params) as query:
     for (columns, rows) in query(sql):
+        print(columns)  # Tuple of column names
         for row in rows:
-            pass
+            print(row)  # Tuple of row  values
 ```
 
 
