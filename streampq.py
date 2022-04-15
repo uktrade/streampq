@@ -159,7 +159,7 @@ def streampq_connect(
                 raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
 
     def encode(conn, value, func, allow_unescaped):
-        def _encode(value):
+        def _value_encode(value):
             must_escape, encoder = encoders_dict.get(type(value), (True, str))
             string_encoded = encoder(value)
             if allow_unescaped and not must_escape:
@@ -178,11 +178,11 @@ def streampq_connect(
 
         def _array_encode(array, depth):
             return (('[' if depth else 'ARRAY[') + ','.join(
-                _array_encode(value, depth+1) if type(value) in encoders_array_types_set else _encode(value)
+                _array_encode(value, depth+1) if type(value) in encoders_array_types_set else _value_encode(value)
                 for value in array
             ) + ']')
 
-        return _array_encode(value, 0) if type(value) in encoders_array_types_set else _encode(value)
+        return _array_encode(value, 0) if type(value) in encoders_array_types_set else _value_encode(value)
 
     def query(sel, socket, conn, set_query_running, sql, literals=(), identifiers=()):
         set_query_running(True)
