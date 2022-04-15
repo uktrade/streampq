@@ -266,6 +266,7 @@ def get_default_decoders():
         ) for oid, array_oid, value_decoder in (
             (16, 1000, lambda v: v == 't'),                                     # bool
             (17, 1001, lambda v: bytes.fromhex(v.lstrip('\\x'))),               # bytea
+            (18, 1002, lambda v: v),                                            # char
             (20, 1016, int),                                                    # int8
             (21, 1005, int),                                                    # smallint
             (23, 1007, int),                                                    # int4
