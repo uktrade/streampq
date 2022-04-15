@@ -285,6 +285,8 @@ def get_default_decoders():
             (1043, 1015, lambda v: v),                                              # varchar
             (1082, 1182, date.fromisoformat),                                       # date
             (1114, 1115, lambda v: datetime.strptime(v, '%Y-%m-%d %H:%M:%S')),      # timestamp
+            (1184, 1185, lambda v: datetime.strptime(
+                '{:<024}'.format(v), '%Y-%m-%d %H:%M:%S%z')),                       # timestamptz
             (1700, 1231, Decimal),                                                  # numeric
             (3802, 3807, json_loads),                                               # jsonb
         )), ())

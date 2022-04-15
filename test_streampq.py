@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from multiprocessing import Process, Event
 from time import sleep
@@ -159,6 +159,8 @@ def test_identifier_escaping(params):
     ("'{{\"2021-01-01\"}}'::_date", (date(2021, 1, 1),)),
     ("'2021-01-01'::timestamp", datetime(2021, 1, 1)),
     ("'{{\"2021-01-01\"}}'::_timestamp", (datetime(2021, 1, 1),)),
+    ("'2021-01-01 10:10:01'::timestamptz", datetime(2021, 1, 1, 10, 10, 1, tzinfo=timezone(timedelta(hours=-10)))),
+    ("'{{\"2021-01-01 10:10:01\"}}'::_timestamptz", (datetime(2021, 1, 1, 10, 10, 1, tzinfo=timezone(timedelta(hours=-10))),)),
     ("1.2::numeric", Decimal('1.2')),
     ("'{{1.2}}'::_numeric", (Decimal('1.2'),)),
     ("'{{\"a\":2}}'::jsonb", {'a': 2}),
@@ -166,6 +168,8 @@ def test_identifier_escaping(params):
 ])
 def test_decoders(params, sql_value, python_value):
     with streampq_connect(params) as query:
+        list(query("SET TIMEZONE TO -10"))
+
         result = tuple(
             tuple(rows)[0][0]
             for cols, rows in query(f'SELECT {sql_value}')
