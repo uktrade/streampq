@@ -176,13 +176,13 @@ def streampq_connect(
 
             return escaped_str
 
-        def _array_encode(array):
-            return 'ARRAY[' + ','.join(
-                _array_encode(value) if type(value) in encoders_array_types_set else _encode(value)
+        def _array_encode(array, depth):
+            return (('[' if depth else 'ARRAY[') + ','.join(
+                _array_encode(value, depth+1) if type(value) in encoders_array_types_set else _encode(value)
                 for value in array
-            ) + ']' if type(value) in encoders_array_types_set else _encode(value)
+            ) + ']') if type(value) in encoders_array_types_set else _encode(value)
 
-        return _array_encode(value)
+        return _array_encode(value, 0)
 
     def query(sel, socket, conn, set_query_running, sql, literals=(), identifiers=()):
         set_query_running(True)
