@@ -100,7 +100,7 @@ def test_identifier_escaping(params):
         )
 
     assert results == ((
-        ('🍰', 'an\'"other', 'ARRAY["1","2"]'),
+        ('🍰', 'an\'"other', '(1, 2)'),
         (('first', 'second', 'third'),)
     ),)
 

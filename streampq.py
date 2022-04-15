@@ -12,16 +12,22 @@ from itertools import groupby
 @contextmanager
 def streampq_connect(
         params=(),
-        get_encoders_array_types=lambda: get_default_encoders_array_types(),
-        get_encoders=lambda: get_default_encoders(),
+        get_literal_encoders_array_types=lambda: get_default_literal_encoders_array_types(),
+        get_literal_encoders=lambda: get_default_literal_encoders(),
         get_decoders=lambda: get_default_decoders(),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
     pq = get_libpq()
 
-    encoders_array_types_set = set(get_encoders_array_types())
-    encoders_dict = dict(get_encoders())
+    literal_encoders_array_types_set = set(get_literal_encoders_array_types())
+    literal_encoders_dict = dict(get_literal_encoders())
     decoders_dict = dict(get_decoders())
+
+    # Identifier encoding is not configurable - no known use case.
+    # Since these are empty then we fall through to passing values through `str`
+    identifier_encoders_array_types_set = set()
+    identifier_encoders_dict = dict()
+
     identity = lambda v: v
 
     pq.PQconnectdbParams.restype = c_void_p
@@ -158,11 +164,11 @@ def streampq_connect(
             if not ok:
                 raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
 
-    def encode(conn, value, func, allow_unescaped):
+    def encode(conn, value, func, array_types_set, encoders_dict):
         def _value_encode(value):
             must_escape, encoder = encoders_dict.get(type(value), (True, str))
             string_encoded = encoder(value)
-            if allow_unescaped and not must_escape:
+            if not must_escape:
                 return string_encoded
             string_encoded_bytes = string_encoded.encode('utf-8')
             escaped_p = c_void_p(0)
@@ -178,21 +184,21 @@ def streampq_connect(
 
         def _array_encode(array, depth):
             return (('[' if depth else 'ARRAY[') + ','.join(
-                _array_encode(value, depth+1) if type(value) in encoders_array_types_set else _value_encode(value)
+                _array_encode(value, depth+1) if type(value) in array_types_set else _value_encode(value)
                 for value in array
             ) + ']')
 
         return \
-            _value_encode(value) if type(value) not in encoders_array_types_set else \
-            _array_encode(value, 0) if allow_unescaped else \
-            _value_encode(_array_encode(value, 0))  # An array as an identifier is odd, but just in case
+            _array_encode(value, 0) if type(value) in array_types_set else \
+            _value_encode(value)
+
 
     def query(sel, socket, conn, set_query_running, sql, literals=(), identifiers=()):
         set_query_running(True)
 
         ok = pq.PQsendQuery(conn, sql.format(**dict(
-            tuple((key, encode(conn, value, pq.PQescapeLiteral, True)) for key, value in literals) +
-            tuple((key, encode(conn, value, pq.PQescapeIdentifier, False)) for key, value in identifiers)
+            tuple((key, encode(conn, value, pq.PQescapeLiteral, literal_encoders_array_types_set, literal_encoders_dict)) for key, value in literals) +
+            tuple((key, encode(conn, value, pq.PQescapeIdentifier, identifier_encoders_array_types_set, identifier_encoders_dict)) for key, value in identifiers)
         )).encode('utf-8'));
         if not ok:
             raise QueryError(pq.PQerrorMessage(conn).decode('utf-8'))
@@ -261,7 +267,7 @@ def streampq_connect(
         yield partial(query, sel, socket, conn, set_query_running)
 
 
-def get_default_encoders():
+def get_default_literal_encoders():
     return (
         # type, (must escape, encoder)
         (type(None), (False, lambda _: 'NULL')),
@@ -273,7 +279,7 @@ def get_default_encoders():
     )
 
 
-def get_default_encoders_array_types():
+def get_default_literal_encoders_array_types():
     return (type(()), type([]))
 
 
