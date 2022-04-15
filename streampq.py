@@ -12,12 +12,14 @@ from itertools import groupby
 @contextmanager
 def streampq_connect(
         params=(),
+        get_encoders_array_types=lambda: get_default_encoders_array_types(),
         get_encoders=lambda: get_default_encoders(),
         get_decoders=lambda: get_default_decoders(),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
     pq = get_libpq()
 
+    encoders_array_types_set = set(get_encoders_array_types())
     encoders_dict = dict(get_encoders())
     decoders_dict = dict(get_decoders())
     identity = lambda v: v
@@ -156,8 +158,25 @@ def streampq_connect(
             if not ok:
                 raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
 
-    def escape(conn, value, func, allow_unescaped):
-        must_escape, encoder = encoders_dict.get(type(value), (True, str))
+    def array_encoder(array):
+        def _encode(value):
+            must_escape, encoder = encoders_dict.get(type(value), (True, str))
+            string_encoded = encoder(value)
+            print(string_encoded)
+            return \
+                string_encoded if not must_escape else \
+                ('"' + string_encoded.replace('\\', '\\\\').replace('"','\\"') + '"')
+
+        return '{' + ','.join(
+            array_encoder(value) if type(value) in encoders_array_types_set else _encode(value)
+            for value in array
+        ) + '}'
+
+    def encode(conn, value, func, allow_unescaped):
+        must_escape, encoder = \
+            (True, array_encoder) if type(value) in encoders_array_types_set else \
+            encoders_dict.get(type(value), (True, str))
+
         string_encoded = encoder(value)
         if allow_unescaped and not must_escape:
             return string_encoded
@@ -177,8 +196,8 @@ def streampq_connect(
         set_query_running(True)
 
         ok = pq.PQsendQuery(conn, sql.format(**dict(
-            tuple((key, escape(conn, value, pq.PQescapeLiteral, True)) for key, value in literals) +
-            tuple((key, escape(conn, value, pq.PQescapeIdentifier, False)) for key, value in identifiers)
+            tuple((key, encode(conn, value, pq.PQescapeLiteral, True)) for key, value in literals) +
+            tuple((key, encode(conn, value, pq.PQescapeIdentifier, False)) for key, value in identifiers)
         )).encode('utf-8'));
         if not ok:
             raise QueryError(pq.PQerrorMessage(conn).decode('utf-8'))
@@ -252,8 +271,15 @@ def get_default_encoders():
         # type, (must escape, encoder)
         (type(None), (False, lambda _: 'NULL')),
         (type(True), (False, lambda value: 'TRUE' if value else 'FALSE')),
+        (type(1), (False, str)),
+        (type(1.0), (False, str)),
+        (Decimal, (False, str)),
         (type(''), (True, lambda value: value)),
     )
+
+
+def get_default_encoders_array_types():
+    return (type(()), type([]))
 
 
 def get_default_decoders():
