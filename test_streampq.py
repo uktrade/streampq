@@ -178,26 +178,26 @@ def test_decoders(params, sql_value, python_value):
     assert result == python_value
 
 
-@pytest.mark.parametrize("python_value,cast,sql_value_as_python", [
-    (None, '', None),
-    (True, '', True),
-    (False, '', False),
-    ('A string', '', 'A string'),
-    (1, '', 1),
-    (3.3, '', Decimal('3.3')),
-    (Decimal('3.3'), '', Decimal('3.3')),
-    (date(2021, 1, 1), '', '2021-01-01'),
-    (datetime(2021, 1, 1), '', '2021-01-01 00:00:00'),
-    (Exception, '', "<class 'Exception'>"),  # No encoder specified so defaults to str
-    (('a','b'), '::_text', ('a','b')),
-    ((('a"','\\b'),('a','b')), '::_text', (('a"','\\b'),('a','b'))),
-    ((True, False), '::_bool', (True,False)),
+@pytest.mark.parametrize("python_value,sql_value_as_python", [
+    (None, None),
+    (True, True),
+    (False, False),
+    ('A string', 'A string'),
+    (1, 1),
+    (3.3, Decimal('3.3')),
+    (Decimal('3.3'), Decimal('3.3')),
+    (date(2021, 1, 1), '2021-01-01'),
+    (datetime(2021, 1, 1), '2021-01-01 00:00:00'),
+    (Exception, "<class 'Exception'>"),  # No encoder specified so defaults to str
+    (('a','b'), ('a','b')),
+    ((('a"','\\b'),('a','b')), (('a"','\\b'),('a','b'))),
+    ((True, False), (True,False)),
 ])
-def test_encoders(params, python_value, cast, sql_value_as_python):
+def test_encoders(params, python_value, sql_value_as_python):
     with streampq_connect(params) as query:
         result = tuple(
             tuple(rows)[0][0]
-            for cols, rows in query(f'SELECT {{value}}{cast} as "col"', literals=(
+            for cols, rows in query('SELECT {value} as "col"', literals=(
                 ('value', python_value),
             ))
         )[0]

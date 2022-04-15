@@ -158,39 +158,31 @@ def streampq_connect(
             if not ok:
                 raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
 
-    def array_encoder(array):
+    def encode(conn, value, func, allow_unescaped):
         def _encode(value):
             must_escape, encoder = encoders_dict.get(type(value), (True, str))
             string_encoded = encoder(value)
-            print(string_encoded)
-            return \
-                string_encoded if not must_escape else \
-                ('"' + string_encoded.replace('\\', '\\\\').replace('"','\\"') + '"')
+            if allow_unescaped and not must_escape:
+                return string_encoded
+            string_encoded_bytes = string_encoded.encode('utf-8')
+            escaped_p = c_void_p(0)
+            try:
+                escaped_p = func(conn, string_encoded_bytes, len(string_encoded_bytes))
+                if not escaped_p:
+                    raise StreamPQError(pq.PQerrorMessage(conn).decode('utf-8'))
+                escaped_str = cast(escaped_p, c_char_p).value.decode('utf-8')
+            finally:
+                pq.PQfreemem(escaped_p)
 
-        return '{' + ','.join(
-            array_encoder(value) if type(value) in encoders_array_types_set else _encode(value)
-            for value in array
-        ) + '}'
+            return escaped_str
 
-    def encode(conn, value, func, allow_unescaped):
-        must_escape, encoder = \
-            (True, array_encoder) if type(value) in encoders_array_types_set else \
-            encoders_dict.get(type(value), (True, str))
+        def _array_encode(array):
+            return 'ARRAY[' + ','.join(
+                _array_encode(value) if type(value) in encoders_array_types_set else _encode(value)
+                for value in array
+            ) + ']' if type(value) in encoders_array_types_set else _encode(value)
 
-        string_encoded = encoder(value)
-        if allow_unescaped and not must_escape:
-            return string_encoded
-        string_encoded_bytes = string_encoded.encode('utf-8')
-        escaped_p = c_void_p(0)
-        try:
-            escaped_p = func(conn, string_encoded_bytes, len(string_encoded_bytes))
-            if not escaped_p:
-                raise StreamPQError(pq.PQerrorMessage(conn).decode('utf-8'))
-            escaped_str = cast(escaped_p, c_char_p).value.decode('utf-8')
-        finally:
-            pq.PQfreemem(escaped_p)
-
-        return escaped_str
+        return _array_encode(value)
 
     def query(sel, socket, conn, set_query_running, sql, literals=(), identifiers=()):
         set_query_running(True)
