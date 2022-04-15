@@ -138,6 +138,8 @@ def test_identifier_escaping(params):
     ("'🍰'::text", '🍰'),
     ("'{{\"one \\\"and\",\"2\"}}'::_text", ('one "and', '2')),
     ("'{{\"NULL\"}}'::_text", ('NULL',)),
+    ("'1'::oid", 1),
+    ("'{{1}}'::_oid", (1,)),
     ("1.5::float4", 1.5),
     ("'{{1.5}}'::_float4", (1.5,)),
     ("1.5::float8", 1.5),

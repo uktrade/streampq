@@ -274,6 +274,7 @@ def get_default_decoders():
             (23, 1007, int),                                                    # int4
             (24, 1008, lambda v: v),                                            # regproc
             (25, 1009, lambda v: v),                                            # text
+            (26, 1028, int),                                                    # oid
             (700, 1021, float),                                                 # float4
             (701, 1022, float),                                                 # float8
             (114, 199, json_loads),                                             # json
