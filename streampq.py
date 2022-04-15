@@ -264,25 +264,26 @@ def get_default_decoders():
             (oid, value_decoder),
             (array_oid, get_array_decoder(value_decoder)),
         ) for oid, array_oid, value_decoder in (
-            (16, 1000, lambda v: v == 't'),                                     # bool
-            (17, 1001, lambda v: bytes.fromhex(v.lstrip('\\x'))),               # bytea
-            (18, 1002, lambda v: v),                                            # char
-            (19, 1003, lambda v: v),                                            # name
-            (20, 1016, int),                                                    # int8
-            (21, 1005, int),                                                    # int2
-            (22, 1006, lambda v: tuple(int(i) for i in v.split())),             # int2vector
-            (23, 1007, int),                                                    # int4
-            (24, 1008, lambda v: v),                                            # regproc
-            (25, 1009, lambda v: v),                                            # text
-            (26, 1028, int),                                                    # oid
-            (700, 1021, float),                                                 # float4
-            (701, 1022, float),                                                 # float8
-            (114, 199, json_loads),                                             # json
-            (1043, 1015, lambda v: v),                                          # varchar
-            (1082, 1182, date.fromisoformat),                                   # date
-            (1114, 1115, lambda v: datetime.strptime(v, '%Y-%m-%d %H:%M:%S')),  # timestamp
-            (1700, 1231, Decimal),                                              # numeric
-            (3802, 3807, json_loads),                                           # jsonb
+            (16, 1000, lambda v: v == 't'),                                         # bool
+            (17, 1001, lambda v: bytes.fromhex(v.lstrip('\\x'))),                   # bytea
+            (18, 1002, lambda v: v),                                                # char
+            (19, 1003, lambda v: v),                                                # name
+            (20, 1016, int),                                                        # int8
+            (21, 1005, int),                                                        # int2
+            (22, 1006, lambda v: tuple(int(i) for i in v.split())),                 # int2vector
+            (23, 1007, int),                                                        # int4
+            (24, 1008, lambda v: v),                                                # regproc
+            (25, 1009, lambda v: v),                                                # text
+            (26, 1028, int),                                                        # oid
+            (27, 1010, lambda v: tuple(int(i) for i in v.strip('()').split(','))),  # tid
+            (700, 1021, float),                                                     # float4
+            (701, 1022, float),                                                     # float8
+            (114, 199, json_loads),                                                 # json
+            (1043, 1015, lambda v: v),                                              # varchar
+            (1082, 1182, date.fromisoformat),                                       # date
+            (1114, 1115, lambda v: datetime.strptime(v, '%Y-%m-%d %H:%M:%S')),      # timestamp
+            (1700, 1231, Decimal),                                                  # numeric
+            (3802, 3807, json_loads),                                               # jsonb
         )), ())
 
 
