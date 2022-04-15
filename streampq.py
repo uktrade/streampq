@@ -277,6 +277,7 @@ def get_default_decoders():
             (26, 1028, int),                                                        # oid
             (27, 1010, lambda v: tuple(int(i) for i in v.strip('()').split(','))),  # tid
             (28, 1011, int),                                                        # xid
+            (29, 1012, int),                                                        # cid
             (700, 1021, float),                                                     # float4
             (701, 1022, float),                                                     # float8
             (114, 199, json_loads),                                                 # json
