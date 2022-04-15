@@ -270,6 +270,7 @@ def get_default_decoders():
             (19, 1003, lambda v: v),                                            # name
             (20, 1016, int),                                                    # int8
             (21, 1005, int),                                                    # int2
+            (22, 1006, lambda v: tuple(int(i) for i in v.split())),             # int2vector
             (23, 1007, int),                                                    # int4
             (25, 1009, lambda v: v),                                            # text
             (700, 1021, float),                                                 # float4
