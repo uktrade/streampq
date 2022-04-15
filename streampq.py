@@ -182,7 +182,10 @@ def streampq_connect(
                 for value in array
             ) + ']')
 
-        return _array_encode(value, 0) if type(value) in encoders_array_types_set else _value_encode(value)
+        return \
+            _value_encode(value) if type(value) not in encoders_array_types_set else \
+            _array_encode(value, 0) if allow_unescaped else \
+            _value_encode(_array_encode(value, 0))  # An array as an identifier is odd, but just in case
 
     def query(sel, socket, conn, set_query_running, sql, literals=(), identifiers=()):
         set_query_running(True)

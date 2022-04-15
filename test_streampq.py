@@ -87,7 +87,7 @@ def test_literal_escaping(params):
 
 def test_identifier_escaping(params):
     sql = '''
-        SELECT 'first' as {first}, 'second' as {second};
+        SELECT 'first' as {first}, 'second' as {second}, 'third' as {third};
     '''
     with streampq_connect(params) as query:
         results = tuple(
@@ -95,13 +95,14 @@ def test_identifier_escaping(params):
             for cols, rows in query(sql, identifiers=(
                 ('first', '🍰'),
                 ('second', 'an\'"other'),
+                ('third', (1,2)),  # Would be very odd to have a column name like this
             ))
         )
 
-    assert results == (
-        (('🍰', 'an\'"other'),
-        (('first', 'second'),)),
-    )
+    assert results == ((
+        ('🍰', 'an\'"other', 'ARRAY["1","2"]'),
+        (('first', 'second', 'third'),)
+    ),)
 
 
 @pytest.mark.parametrize("sql_value,python_value", [
