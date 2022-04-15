@@ -105,10 +105,14 @@ def test_identifier_escaping(params):
 
 
 @pytest.mark.parametrize("sql_value,python_value", [
+    # No explicit types - so could depend on database defaults?
     ("NULL", None),
     ("TRUE", True),
     ("FALSE", False),
     ("1", 1),
+    ("3.3", Decimal('3.3')),
+    ("'🍰'", '🍰'),
+    # With explicit types
     ("1::int2", 1),
     ("1::int4", 1),
     ("1::int8", 1),
@@ -120,8 +124,6 @@ def test_identifier_escaping(params):
     ("1.2::numeric", Decimal('1.2')),
     ("1.5::real", 1.5),
     ("1.5::double precision", 1.5),
-    ("'🍰'", '🍰'),
-    ("3.3", Decimal('3.3')),
     ("'2021-01-01'::date", date(2021, 1, 1)),
     ("'2021-01-01'::timestamp", datetime(2021, 1, 1)),
     ("'{{\"a\":2}}'::jsonb", {'a': 2}),
