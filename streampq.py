@@ -257,25 +257,27 @@ def get_default_encoders():
 
 
 def get_default_decoders():
-    return (
-        (None, lambda _: None),                                      # null
-        (16, lambda v: v == 't'),                                    # bool
-        (20, int),                                                   # int8
-        (21, int),                                                   # smallint
-        (23, int),                                                   # int4
-        (25, lambda v: v),                                           # text
-        (700, float),                                                # real
-        (701, float),                                                # double precision
-        (114, json_loads),                                           # json
-        (1000, get_array_decoder(lambda v: v == 't')),               # bool[]
-        (1007, get_array_decoder(int)),                              # int4[]
-        (1009, get_array_decoder(lambda v: v)),                      # text[]
-        (1114, lambda v: datetime.strptime(v, '%Y-%m-%d %H:%M:%S')), # timestamp
-        (1015, get_array_decoder(lambda v: v)),                      # varchar[]
-        (1082, date.fromisoformat),                                  # date
-        (1700, Decimal),                                             # numeric
-        (3802, json_loads),                                          # jsonb
-    )
+    # Returns tuple of oid, decoder pairs
+    return \
+        ((None, lambda _: None),) + \
+        sum(tuple((
+            (oid, decoder),
+            (array_oid, get_array_decoder(decoder)),
+        ) for oid, array_oid, decoder in (
+            (16, 1000, lambda v: v == 't'),                                     # bool
+            (20, 1016, int),                                                    # int8
+            (21, 1005, int),                                                    # smallint
+            (23, 1007, int),                                                    # int4
+            (25, 1009, lambda v: v),                                            # text
+            (700, 1021, float),                                                 # float4
+            (701, 1022, float),                                                 # float8
+            (114, 199, json_loads),                                             # json
+            (1043, 1015, lambda v: v),                                          # varchar
+            (1082, 1182, date.fromisoformat),                                   # date
+            (1114, 1115, lambda v: datetime.strptime(v, '%Y-%m-%d %H:%M:%S')),  # timestamp
+            (1700, 1231, Decimal),                                              # numeric
+            (3802, 3807, json_loads),                                           # jsonb
+        )), ())
 
 
 def get_array_decoder(value_decoder):
