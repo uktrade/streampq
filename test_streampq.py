@@ -120,6 +120,8 @@ def test_identifier_escaping(params):
     ("'{{\"\\\\xDE00BEEF\"}}'::_bytea", (b'\xde\x00\xbe\xef',)),
     ("'a'::char", 'a'),
     ("'{{a}}'::_char", ('a',)),
+    ("'a'::name", 'a'),
+    ("'{{a}}'::_name", ('a',)),
     ("1::int8", 1),
     ("'{{1}}'::_int8", (1,)),
     ("1::int2", 1),

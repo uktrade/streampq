@@ -267,6 +267,7 @@ def get_default_decoders():
             (16, 1000, lambda v: v == 't'),                                     # bool
             (17, 1001, lambda v: bytes.fromhex(v.lstrip('\\x'))),               # bytea
             (18, 1002, lambda v: v),                                            # char
+            (19, 1003, lambda v: v),                                            # name
             (20, 1016, int),                                                    # int8
             (21, 1005, int),                                                    # int2
             (23, 1007, int),                                                    # int4
