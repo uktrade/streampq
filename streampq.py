@@ -261,9 +261,9 @@ def get_default_decoders():
     return \
         ((None, lambda _: None),) + \
         sum(tuple((
-            (oid, decoder),
-            (array_oid, get_array_decoder(decoder)),
-        ) for oid, array_oid, decoder in (
+            (oid, value_decoder),
+            (array_oid, get_array_decoder(value_decoder)),
+        ) for oid, array_oid, value_decoder in (
             (16, 1000, lambda v: v == 't'),                                     # bool
             (20, 1016, int),                                                    # int8
             (21, 1005, int),                                                    # smallint
