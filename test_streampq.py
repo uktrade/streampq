@@ -134,6 +134,8 @@ def test_identifier_escaping(params):
     ("NULL::int4[]", None),
     ("'{{}}'::int4[]", ()),
     ("'{{TRUE,FALSE}}'::bool[]", (True, False)),
+    ("'\\xDE00BEEF'::bytea", b'\xde\x00\xbe\xef'),
+    ("'{{\"\\\\xDE00BEEF\"}}'::bytea[]", (b'\xde\x00\xbe\xef',)),
 ])
 def test_decoders(params, sql_value, python_value):
     with streampq_connect(params) as query:
