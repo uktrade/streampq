@@ -77,7 +77,7 @@ There are [164 built-in PostgreSQL data types (including array types)](https://g
 
 To customise these, see the default value of the `get_decoders` parameter of the `streampq_connect` function in [streampq.py](./streampq.py).
 
-\*The Python built-in timedelta type is not used for PostgreSQL interval since timedelta does not offer a way to store PostgreSQL intervals of years or months, other than converting to days which would be a loss of precision.
+\*The Python built-in timedelta type is not used for PostgreSQL interval since timedelta does not offer a way to store PostgreSQL intervals of years or months, other than converting to days which would be a loss of information.
 
 
 ### Bind parameters - literals
