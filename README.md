@@ -62,7 +62,7 @@ with streampq_connect(connection_params) as query:
 There are [166 built-in PostgreSQL data types (including array types)](https://github.com/postgres/postgres/blob/master/src/include/catalog/pg_type.dat), and streampq converts them to Python types. In summary:
 
 | PostgreSQL types                 | Python type                                 |
-|----------------------------------|---------------------------------------------|
+|:---------------------------------| :-------------------------------------------|
 | text (e.g. varchar)              | str                                         |
 | byte (e.g. bytea)                | bytes                                       |
 | integer (e.g. int4)              | int                                         |
