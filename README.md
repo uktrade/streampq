@@ -57,6 +57,26 @@ with streampq_connect(connection_params) as query:
 ```
 
 
+### PostgreSQL data types to Python types
+
+There are [166 built-in PostgreSQL data types (including array types)](https://github.com/postgres/postgres/blob/master/src/include/catalog/pg_type.dat), and streampq converts them to Python types. In summary:
+
+| PostgreSQL types                 | Python type                                 |
+|----------------------------------|---------------------------------------------|
+| text (e.g. varchar)              | str                                         |
+| byte (e.g. bytea)                | bytes                                       |
+| integer (e.g. int4)              | int                                         |
+| inexact real number (e.g. float) | float                                       |
+| exact real number (e.g. numeric) | Decimal                                     |
+| date                             | date                                        |
+| timestamp                        | datetime (without timezone)                 |
+| timestamptz                      | datetime (with offset timezone)             |
+| json and jsonb                   | output of json.loads                        |
+| arrays and vectors               | tuple (of any of the above types or tuples) |
+
+To customise these, see the default value of the `get_decoders` parameter of the `streampq_connect` function in [streampq.py](./streampq.py).
+
+
 ### Bind parameters - literals
 
 Dynamic SQL literals can be bound using the `literals` parameter of the query function. It must be an iterable of key-value pairs.
