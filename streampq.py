@@ -1,8 +1,10 @@
+from collections import namedtuple
 from contextlib import contextmanager
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
 from json import loads as json_loads
+import re
 from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
 from ctypes import cdll, create_string_buffer, byref, cast, c_char_p, c_void_p, c_int, c_size_t
 from ctypes.util import find_library
@@ -285,6 +287,17 @@ def get_default_literal_encoders_array_types():
 
 def get_default_decoders():
     # Returns tuple of oid, decoder pairs
+
+    interval_regex = re.compile(r'((?P<years>-?\d+) years?)?( ?(?P<months>-?\d+) mons?)?( ?(?P<days>-?\d+) days?)?( ?(?P<sign>-)(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>.*))?')
+    def decode_interval(v):
+        m = re.match(interval_regex, v)
+        years, months, days, hours, minutes, seconds = (
+            func(m.group(name)) if m.group(name) else 0
+            for func, name in ((int, 'years'), (int, 'months'), (int, 'days'), (int, 'hours'), (int, 'minutes'), (Decimal, 'seconds'))
+        )
+        sign = -1 if m.group('sign') == '-' else 1
+        return Interval(years=years, months=months, days=days, hours=sign*hours, minutes=sign*minutes, seconds=sign*seconds)
+
     return \
         ((None, lambda _: None),) + \
         sum(tuple((
@@ -314,6 +327,7 @@ def get_default_decoders():
             (1114, 1115, lambda v: datetime.strptime(v, '%Y-%m-%d %H:%M:%S')),      # timestamp
             (1184, 1185, lambda v: datetime.strptime(
                 '{:<024}'.format(v), '%Y-%m-%d %H:%M:%S%z')),                       # timestamptz
+            (1186, 1187, decode_interval),                                          # interval
             (1700, 1231, Decimal),                                                  # numeric
             (3802, 3807, json_loads),                                               # jsonb
         )), ())
@@ -374,6 +388,9 @@ def get_array_decoder(value_decoder):
         return stack[0][0]
 
     return decode
+
+
+Interval = namedtuple('Interval', ['years', 'months', 'days', 'hours', 'minutes', 'seconds'], defaults=(0,)*6)
 
 
 class StreamPQError(Exception):

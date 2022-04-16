@@ -72,6 +72,7 @@ There are [164 built-in PostgreSQL data types (including array types)](https://g
 | timestamp                         | datetime (without timezone)                 |
 | timestamptz                       | datetime (with offset timezone)             |
 | json and jsonb                    | output of json.loads                        |
+| interval                          | streampq.Interval                           |
 | arrays and vectors                | tuple (of any of the above types or tuples) |
 
 To customise these, see the default value of the `get_decoders` parameter of the `streampq_connect` function in [streampq.py](./streampq.py).
