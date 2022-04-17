@@ -75,6 +75,7 @@ There are [164 built-in PostgreSQL data types (including array types)](https://g
 | timestamptz                       | datetime (with offset timezone)                        |
 | json and jsonb                    | output of json.loads                                   |
 | interval                          | [streampq.Interval](#streampqinterval)                 |
+| range (e.g. daterange)            | [streampq.Range](#streampqrange)                       |
 | arrays and vectors                | tuple (of any of the above types, or of nested tuples) |
 
 To customise these, override the default value of the `get_decoders` parameter of the `streampq_connect` function in [streampq.py](./streampq.py).
@@ -95,6 +96,17 @@ Instead, a [namedtuple](https://docs.python.org/3/library/collections.html#colle
 | hours   | int     |
 | minutes | int     |
 | seconds | Decimal |
+
+
+#### streampq.Range
+
+There is no Python built-in type for a PosgreSQL range. So for these, a [namedtuple](https://docs.python.org/3/library/collections.html#collections.namedtuple) is defined, streampq.Range, with members:
+
+| Member  | Type                                                                       |
+|:--------|:---------------------------------------------------------------------------|
+| lower   | int, date, datetime (without timezone), or datetime (with offset timezone) |
+| upper   | int, date, datetime (without timezone), or datetime (with offset timezone) |
+| bounds  | str - one of `()`, `(]`, `[)`, or `[]`                                     |
 
 
 ### Bind parameters - literals
