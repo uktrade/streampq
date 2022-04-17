@@ -72,12 +72,16 @@ There are [164 built-in PostgreSQL data types (including array types)](https://g
 | timestamp                         | datetime (without timezone)                 |
 | timestamptz                       | datetime (with offset timezone)             |
 | json and jsonb                    | output of json.loads                        |
-| interval                          | streampq.Interval\*                         |
+| interval                          | streampq.Interval                           |
 | arrays and vectors                | tuple (of any of the above types or tuples) |
 
 To customise these, see the default value of the `get_decoders` parameter of the `streampq_connect` function in [streampq.py](./streampq.py).
 
-\*The Python built-in timedelta type is not used for PostgreSQL interval since timedelta does not offer a way to store PostgreSQL intervals of years or months, other than converting to days which would be a loss of information.
+In general, built-in types are preferred over custom types, and immutable types are preferred over mutable.
+
+#### streampq.Interval
+
+The Python built-in timedelta type is not used for PostgreSQL interval since timedelta does not offer a way to store PostgreSQL intervals of years or months, other than converting to days which would be a loss of information.
 
 
 ### Bind parameters - literals
