@@ -363,7 +363,6 @@ def get_range_decoder(value_decoder):
     OUT = object()
     IN_UNQUOTED = object()
     IN_QUOTED = object()
-    IN_QUOTED_ESCAPE = object()
 
     def decode(raw):
         state = OUT
@@ -399,13 +398,8 @@ def get_range_decoder(value_decoder):
                     values.append(value_decoder(''.join(value)))
                     value = []
                     state = OUT
-                elif c == '\\':
-                    state = IN_QUOTED_ESCAPE
                 else:
                     value.append(c)
-            elif state is IN_QUOTED_ESCAPE:
-                value.append(c)
-                state = IN_QUOTED
 
         return Range(lower=values[0], upper=values[1], bounds=''.join(bounds))
 
@@ -416,7 +410,6 @@ def get_multirange_decoder(value_decoder):
     OUT = object()
     IN_UNQUOTED = object()
     IN_QUOTED = object()
-    IN_QUOTED_ESCAPE = object()
 
     def decode(raw):
         state = OUT
@@ -461,13 +454,8 @@ def get_multirange_decoder(value_decoder):
                     values.append(value_decoder(''.join(value)))
                     value = []
                     state = OUT
-                elif c == '\\':
-                    state = IN_QUOTED_ESCAPE
                 else:
                     value.append(c)
-            elif state is IN_QUOTED_ESCAPE:
-                value.append(c)
-                state = IN_QUOTED
 
         return tuple(ranges)
 
