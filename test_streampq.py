@@ -195,6 +195,33 @@ def test_decoders(params, sql_value, python_value):
     assert result == python_value
 
 
+@pytest.mark.skipif(os.environ.get('POSTGRES_VERSION') == '13.6', reason='multiranges not available before PostgreSQL 14')
+@pytest.mark.parametrize("sql_value,python_value", [
+    ("'{{[1,2],[5,6]}}'::int4multirange", (Range(1,3,'[)'),Range(5,7,'[)'))),
+    ("ARRAY['{{[1,2]}}']::_int4multirange", ((Range(1,3,'[)'),),)),
+    ("'{{[1,2]}}'::nummultirange", (Range(Decimal('1'),Decimal('2'),'[]'),)),
+    ("ARRAY['{{[1,2]}}']::_nummultirange", ((Range(Decimal('1'),Decimal('2'),'[]'),),)),
+    ("'{{[2021-01-01,2021-01-04)}}'::tsmultirange", (Range(datetime(2021, 1, 1),datetime(2021, 1, 4),'[)'),)),
+    ("ARRAY['{{[2021-01-01,2021-01-04)}}']::_tsmultirange", ((Range(datetime(2021, 1, 1),datetime(2021, 1, 4),'[)'),),)),
+    ("'{{[2021-01-01,2021-01-04)}}'::tstzmultirange", (Range(datetime(2021, 1, 1, tzinfo=timezone(timedelta(hours=-10))),datetime(2021, 1, 4, tzinfo=timezone(timedelta(hours=-10))),'[)'),)),
+    ("ARRAY['{{[2021-01-01,2021-01-04)}}']::_tstzmultirange", ((Range(datetime(2021, 1, 1, tzinfo=timezone(timedelta(hours=-10))),datetime(2021, 1, 4, tzinfo=timezone(timedelta(hours=-10))),'[)'),),)),
+    ("'{{[2021-01-01,2021-01-04),[2022-01-01,2022-01-04)}}'::datemultirange", (Range(date(2021, 1, 1),date(2021, 1, 4),'[)'),Range(date(2022, 1, 1),date(2022, 1, 4),'[)'))),
+    ("ARRAY['{{[2021-01-01,2021-01-04)}}']::_datemultirange", ((Range(date(2021, 1, 1),date(2021, 1, 4),'[)'),),)),
+    ("'{{[1,2],[1,2]}}'::int8multirange", (Range(1,3,'[)'),)),
+    ("ARRAY['{{[1,2]}}']::_int8multirange", ((Range(1,3,'[)'),),)),
+])
+def test_multirange_decoders(params, sql_value, python_value):
+    with streampq_connect(params) as query:
+        list(query("SET TIMEZONE TO -10"))
+
+        result = tuple(
+            tuple(rows)[0][0]
+            for cols, rows in query(f'SELECT {sql_value}')
+        )[0]
+
+    assert result == python_value
+
+
 @pytest.mark.parametrize("python_value,sql_value_as_python", [
     (None, None),
     (True, True),

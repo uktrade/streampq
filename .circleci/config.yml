@@ -25,6 +25,9 @@ jobs:
         type: string
     docker:
       - image: cimg/python:<< parameters.python-version >>
+        environment:
+          PYTHON_VERSION: << parameters.python-version >>
+          POSTGRES_VERSION: << parameters.postgres-version >>
       - image: cimg/postgres:<< parameters.postgres-version >>
         environment:
           POSTGRES_DB: postgres

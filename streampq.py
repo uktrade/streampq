@@ -324,6 +324,12 @@ def get_default_decoders():
             (3910, 3911, get_range_decoder(get_timestamptz_decoder())),             # tstzrange
             (3912, 3913, get_range_decoder(date.fromisoformat)),                    # daterange
             (3926, 3927, get_range_decoder(int)),                                   # int8range
+            (4451, 6150, get_multirange_decoder(int)),                              # int4multirange
+            (4532, 6151, get_multirange_decoder(Decimal)),                          # nummultirange
+            (4533, 6152, get_multirange_decoder(get_timestamp_decoder())),          # tsmultirange
+            (4534, 6153, get_multirange_decoder(get_timestamptz_decoder())),        # tstzmultirange
+            (4535, 6155, get_multirange_decoder(date.fromisoformat)),               # datemultirange
+            (4536, 6157, get_multirange_decoder(int)),                              # int8multirange
         )), ())
 
 
@@ -404,6 +410,72 @@ def get_range_decoder(value_decoder):
         return Range(lower=values[0], upper=values[1], bounds=''.join(bounds))
 
     return decode
+
+
+def get_multirange_decoder(value_decoder):
+    OUT = object()
+    IN_UNQUOTED = object()
+    IN_QUOTED = object()
+    IN_QUOTED_ESCAPE = object()
+
+    def decode(raw):
+        state = OUT
+        ranges = []
+        bounds = []
+        values = []
+        value = []
+
+        for c in raw:
+            if state is OUT:
+                if c in '([':
+                    bounds.append(c)
+                elif c in '])':
+                    bounds.append(c)
+                    ranges.append(Range(lower=values[0], upper=values[1], bounds=''.join(bounds)))
+                    bounds = []
+                    values = []
+                elif c == '"':
+                    state = IN_QUOTED
+                elif c in '{,}':
+                    pass
+                else:
+                    value.append(c)
+                    state = IN_UNQUOTED
+            elif state is IN_UNQUOTED:
+                if c in ')]':
+                    values.append(value_decoder(''.join(value)) if value else None)
+                    bounds.append(c)
+                    ranges.append(Range(lower=values[0], upper=values[1], bounds=''.join(bounds)))
+                    bounds = []
+                    values = []
+                    value = []
+                    state = OUT
+                elif c in ',':
+                    values.append(value_decoder(''.join(value)) if value else None)
+                    value = []
+                    state = OUT
+                elif c == '}':
+                    pass
+                else:
+                    value.append(c)
+            elif state is IN_QUOTED:
+                if c == '"':
+                    values.append(value_decoder(''.join(value)))
+                    value = []
+                    state = OUT
+                elif c == '\\':
+                    state = IN_QUOTED_ESCAPE
+                else:
+                    value.append(c)
+            elif state is IN_QUOTED_ESCAPE:
+                value.append(c)
+                state = IN_QUOTED
+
+        return tuple(ranges)
+
+    return decode
+
+
 
 def get_array_decoder(value_decoder):
     OUT = object()
