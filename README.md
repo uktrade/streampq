@@ -86,7 +86,7 @@ The Python built-in timedelta type is not used for PostgreSQL interval since tim
 A [namedtuple](https://docs.python.org/3/library/collections.html#collections.namedtuple) is defined, streampq.Interval, with members:
 
 | Member  | Type    |
-|---------|---------|
+|:--------|:--------|
 | years   | int     |
 | months  | int     |
 | days    | int     |
