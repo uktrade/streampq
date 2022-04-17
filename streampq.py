@@ -318,6 +318,12 @@ def get_default_decoders():
             (1186, 1187, get_interval_decoder()),                                   # interval
             (1700, 1231, Decimal),                                                  # numeric
             (3802, 3807, json_loads),                                               # jsonb
+            (3904, 3905, get_range_decoder(int)),                                   # int4range
+            (3906, 3907, get_range_decoder(Decimal)),                               # numrange
+            (3908, 3909, get_range_decoder(get_timestamp_decoder())),               # tsrange
+            (3910, 3911, get_range_decoder(get_timestamptz_decoder())),             # tstzrange
+            (3912, 3913, get_range_decoder(date.fromisoformat)),                    # daterange
+            (3926, 3927, get_range_decoder(int)),                                   # int8range
         )), ())
 
 
@@ -346,6 +352,59 @@ def get_interval_decoder():
 
     return decode
 
+
+def get_range_decoder(value_decoder):
+    OUT = object()
+    IN_UNQUOTED = object()
+    IN_QUOTED = object()
+    IN_QUOTED_ESCAPE = object()
+
+    def decode(raw):
+        state = OUT
+        bounds = []
+        values = []
+        value = []
+
+        print('raw', len(raw), raw)
+        for c in raw:
+            if state is OUT:
+                if c in '([])':
+                    bounds.append(c)
+                elif c == '"':
+                    state = IN_QUOTED
+                elif c == ',':
+                    pass
+                else:
+                    value.append(c)
+                    state = IN_UNQUOTED
+            elif state is IN_UNQUOTED:
+                if c in ')]':
+                    values.append(value_decoder(''.join(value)) if value else None)
+                    bounds.append(c)
+                    value = []
+                    state = OUT
+                elif c in ',':
+                    values.append(value_decoder(''.join(value)) if value else None)
+                    value = []
+                    state = OUT
+                else:
+                    value.append(c)
+            elif state is IN_QUOTED:
+                if c == '"':
+                    values.append(value_decoder(''.join(value)))
+                    value = []
+                    state = OUT
+                elif c == '\\':
+                    state = IN_QUOTED_ESCAPE
+                else:
+                    value.append(c)
+            elif state is IN_QUOTED_ESCAPE:
+                value.append(c)
+                state = IN_QUOTED
+
+        return Range(lower=values[0], upper=values[1], bounds=''.join(bounds))
+
+    return decode
 
 def get_array_decoder(value_decoder):
     OUT = object()
@@ -405,6 +464,7 @@ def get_array_decoder(value_decoder):
 
 
 Interval = namedtuple('Interval', ['years', 'months', 'days', 'hours', 'minutes', 'seconds'], defaults=(0,)*6)
+Range = namedtuple('Interval', ['lower', 'upper', 'bounds'])
 
 
 class StreamPQError(Exception):

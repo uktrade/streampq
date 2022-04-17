@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-from streampq import streampq_connect, Interval, ConnectionError, QueryError
+from streampq import streampq_connect, Interval, Range, ConnectionError, QueryError
 
 
 @pytest.fixture
@@ -168,6 +168,18 @@ def test_identifier_escaping(params):
     ("ARRAY[interval '2 minutes ago']", (Interval(minutes=-2),)),
     ("1.2::numeric", Decimal('1.2')),
     ("'{{1.2}}'::_numeric", (Decimal('1.2'),)),
+    ("'[1,2]'::int4range", Range(1,3,'[)')),
+    ("ARRAY['[1,2]']::_int4range", (Range(1,3,'[)'),)),
+    ("'[1,2]'::numrange", Range(Decimal('1'),Decimal('2'),'[]')),
+    ("ARRAY['[1,2]']::_numrange", (Range(Decimal('1'),Decimal('2'),'[]'),)),
+    ("'[2021-01-01,2021-01-04)'::tsrange", Range(datetime(2021, 1, 1),datetime(2021, 1, 4),'[)')),
+    ("ARRAY['[2021-01-01,2021-01-04)']::_tsrange", (Range(datetime(2021, 1, 1),datetime(2021, 1, 4),'[)'),)),
+    ("'[2021-01-01,2021-01-04)'::tstzrange", Range(datetime(2021, 1, 1, tzinfo=timezone(timedelta(hours=-10))),datetime(2021, 1, 4, tzinfo=timezone(timedelta(hours=-10))),'[)')),
+    ("ARRAY['[2021-01-01,2021-01-04)']::_tstzrange", (Range(datetime(2021, 1, 1, tzinfo=timezone(timedelta(hours=-10))),datetime(2021, 1, 4, tzinfo=timezone(timedelta(hours=-10))),'[)'),)),
+    ("'[2021-01-01,2021-01-04)'::daterange", Range(date(2021, 1, 1),date(2021, 1, 4),'[)')),
+    ("ARRAY['[2021-01-01,2021-01-04)']::_daterange", (Range(date(2021, 1, 1),date(2021, 1, 4),'[)'),)),
+    ("'[1,2]'::int8range", Range(1,3,'[)')),
+    ("ARRAY['[1,2]']::_int8range", (Range(1,3,'[)'),)),
     ("'{{\"a\":2}}'::jsonb", {'a': 2}),
     ("'{{\\{{\\\"a\\\":2\\}}}}'::_jsonb", ({'a': 2},)),
 ])
