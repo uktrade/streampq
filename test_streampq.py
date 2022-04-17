@@ -168,6 +168,8 @@ def test_identifier_escaping(params):
     ("ARRAY[interval '2 minutes ago']", (Interval(minutes=-2),)),
     ("1.2::numeric", Decimal('1.2')),
     ("'{{1.2}}'::_numeric", (Decimal('1.2'),)),
+    ("'{{\"a\":2}}'::jsonb", {'a': 2}),
+    ("'{{\\{{\\\"a\\\":2\\}}}}'::_jsonb", ({'a': 2},)),
     ("'[1,2]'::int4range", Range(1,3,'[)')),
     ("ARRAY['[1,2]']::_int4range", (Range(1,3,'[)'),)),
     ("'[1,2]'::numrange", Range(Decimal('1'),Decimal('2'),'[]')),
@@ -180,8 +182,6 @@ def test_identifier_escaping(params):
     ("ARRAY['[2021-01-01,2021-01-04)']::_daterange", (Range(date(2021, 1, 1),date(2021, 1, 4),'[)'),)),
     ("'[1,2]'::int8range", Range(1,3,'[)')),
     ("ARRAY['[1,2]']::_int8range", (Range(1,3,'[)'),)),
-    ("'{{\"a\":2}}'::jsonb", {'a': 2}),
-    ("'{{\\{{\\\"a\\\":2\\}}}}'::_jsonb", ({'a': 2},)),
 ])
 def test_decoders(params, sql_value, python_value):
     with streampq_connect(params) as query:
