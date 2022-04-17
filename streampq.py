@@ -365,7 +365,6 @@ def get_range_decoder(value_decoder):
         values = []
         value = []
 
-        print('raw', len(raw), raw)
         for c in raw:
             if state is OUT:
                 if c in '([])':
