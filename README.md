@@ -83,6 +83,17 @@ In general, built-in types are preferred over custom types, and immutable types 
 
 The Python built-in timedelta type is not used for PostgreSQL interval since timedelta does not offer a way to store PostgreSQL intervals of years or months, other than converting to days which would be a loss of information.
 
+A [namedtuple](https://docs.python.org/3/library/collections.html#collections.namedtuple) is defined, streampq.Interval, with members:
+
+| Member  | Type    |
+|---------|---------|
+| years   | int     |
+| months  | int     |
+| days    | int     |
+| hours   | int     |
+| minutes | int     |
+| seconds | Decimal |
+
 
 ### Bind parameters - literals
 
