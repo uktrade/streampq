@@ -77,7 +77,7 @@ There are [164 built-in PostgreSQL data types (including array types)](https://g
 | interval                          | [streampq.Interval](#streampqinterval)                 |
 | arrays and vectors                | tuple (of any of the above types, or of nested tuples) |
 
-To customise these, see the default value of the `get_decoders` parameter of the `streampq_connect` function in [streampq.py](./streampq.py).
+To customise these, override the default value of the `get_decoders` parameter of the `streampq_connect` function in [streampq.py](./streampq.py).
 
 In general, built-in types are preferred over custom types, and immutable types are preferred over mutable.
 
