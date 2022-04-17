@@ -23,6 +23,8 @@ The `libpq` binary library is also required. This is typically either already in
 - Linux (Debian): `apt install libpq5`
 - Linux (Red Hat):`yum install postgresql-libs`
 
+The only runtime dependencies are `libpq` and Python itself.
+
 
 ## Usage
 
