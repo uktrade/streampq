@@ -66,7 +66,7 @@ There are [164 built-in PostgreSQL data types (including array types)](https://g
 | PostgreSQL types                  | Python type                                            |
 |:----------------------------------| :------------------------------------------------------|
 | null                              | None                                                   |
-| text (e.g. varchar)               | str                                                    |
+| text (e.g. varchar)<br>xml        | str                                                    |
 | byte (e.g. bytea)                 | bytes                                                  |
 | integer (e.g. int4)               | int                                                    |
 | inexact real number (e.g. float4) | float                                                  |

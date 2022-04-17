@@ -154,6 +154,8 @@ def test_identifier_escaping(params):
     ("1.5::float8", 1.5),
     ("'{{1.5}}'::_float8", (1.5,)),
     ("'{{\"b\":2}}'::json", {'b': 2}),
+    ("'<a>b</a>'::xml", '<a>b</a>'),
+    ("ARRAY['<a>b</a>']::_xml", ('<a>b</a>',)),
     ("'🍰'::varchar", '🍰'),
     ("'{{\"one \\\"and\",\"2\"}}'::_varchar", ('one "and', '2')),
     ("'2021-01-01'::date", date(2021, 1, 1)),

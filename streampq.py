@@ -309,6 +309,7 @@ def get_default_decoders():
             (29, 1012, int),                                                        # cid
             (30, 1013, lambda v: tuple(int(i) for i in v.split())),                 # oidvector
             (114, 199, json_loads),                                                 # json
+            (142, 143, lambda v: v),                                                # xml
             (700, 1021, float),                                                     # float4
             (701, 1022, float),                                                     # float8
             (1043, 1015, lambda v: v),                                              # varchar
