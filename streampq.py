@@ -454,8 +454,6 @@ def get_multirange_decoder(value_decoder):
                     values.append(value_decoder(''.join(value)) if value else None)
                     value = []
                     state = OUT
-                elif c == '}':
-                    pass
                 else:
                     value.append(c)
             elif state is IN_QUOTED:
