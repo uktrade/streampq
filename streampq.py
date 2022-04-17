@@ -313,7 +313,7 @@ def get_default_decoders():
             (114, 199, json_loads),                                                 # json
             (1043, 1015, lambda v: v),                                              # varchar
             (1082, 1182, date.fromisoformat),                                       # date
-            (1114, 1115, get_timstamp_decoder()),                                   # timestamp
+            (1114, 1115, get_timestamp_decoder()),                                  # timestamp
             (1184, 1185, get_timestamptz_decoder()),                                # timestamptz
             (1186, 1187, get_interval_decoder()),                                   # interval
             (1700, 1231, Decimal),                                                  # numeric
@@ -321,7 +321,7 @@ def get_default_decoders():
         )), ())
 
 
-def get_timstamp_decoder():
+def get_timestamp_decoder():
     def decode(raw):
         return datetime.strptime(raw, '%Y-%m-%d %H:%M:%S')
     return decode
