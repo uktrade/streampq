@@ -11,7 +11,7 @@ setuptools.setup(
     version='0.0.28',
     author='Department for International Trade',
     author_email='sre@digital.trade.gov.uk',
-    description='Stream results of multi statement PostgreSQL queries from Python without a server-side cursor',
+    description='PostgreSQL adapter to stream results of multi-statement queries without a server-side cursor',
     long_description=long_description(),
     long_description_content_type='text/markdown',
     url='https://github.com/uktrade/streampq',
