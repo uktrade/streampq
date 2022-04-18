@@ -314,7 +314,7 @@ def get_default_decoders():
             (700, 1021, float),                                                     # float4
             (701, 1022, float),                                                     # float8
             (774, 775, lambda v: v),                                                # macaddr8
-            (790, 791, str),                                                        # money
+            (790, 791, lambda v: v),                                                # money
             (829, 1040, lambda v: v),                                               # macaddr
             (869, 1041, lambda v: v),                                               # inet
             (1043, 1015, lambda v: v),                                              # varchar
