@@ -361,7 +361,7 @@ def get_timestamp_decoder():
 
 def get_timestamptz_decoder():
     def decode(raw):
-        # Inifinities don't come with a timezone, so we just use 0-offset
+        # Infinities don't come with a timezone, so we just use 0-offset
         return \
             datetime.min.replace(tzinfo=timezone(timedelta())) if raw == '-infinity' else \
             datetime.max.replace(tzinfo=timezone(timedelta())) if raw == 'infinity' else \
