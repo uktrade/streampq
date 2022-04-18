@@ -177,6 +177,8 @@ def test_identifier_escaping(params):
     ("'infinity'::timestamp", datetime.max),
     ("'{{\"2021-01-01 10:10:01\"}}'::_timestamp", (datetime(2021, 1, 1, 10, 10, 1),)),
     ("'2021-01-01 05:10:01'::timestamptz", datetime(2021, 1, 1, 5, 10, 1, tzinfo=timezone(timedelta(hours=-10)))),
+    ("'-infinity'::timestamptz",  datetime.min.replace(tzinfo=timezone(timedelta()))),
+    ("'infinity'::timestamptz", datetime.max.replace(tzinfo=timezone(timedelta()))),
     ("'{{\"2021-01-01 05:10:01\"}}'::_timestamptz", (datetime(2021, 1, 1, 5, 10, 1, tzinfo=timezone(timedelta(hours=-10))),)),
     ("interval '1 year 3 months 5 weeks 3 days 1 hours 2 minutes 6.3 seconds ago'", Interval(years=-1, months=-3, days=-38, hours=-1, minutes=-2, seconds=Decimal('-6.3'))),
     ("interval '1 year ago'", Interval(years=-1)),

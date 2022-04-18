@@ -1,6 +1,6 @@
 from collections import namedtuple
 from contextlib import contextmanager
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from functools import partial
 from json import loads as json_loads
@@ -361,7 +361,11 @@ def get_timestamp_decoder():
 
 def get_timestamptz_decoder():
     def decode(raw):
-        return datetime.strptime('{:<024}'.format(raw), '%Y-%m-%d %H:%M:%S%z')
+        # Inifinities don't come with a timezone, so we just use 0-offset
+        return \
+            datetime.min.replace(tzinfo=timezone(timedelta())) if raw == '-infinity' else \
+            datetime.max.replace(tzinfo=timezone(timedelta())) if raw == 'infinity' else \
+            datetime.strptime('{:<024}'.format(raw), '%Y-%m-%d %H:%M:%S%z')
     return decode
 
 
