@@ -310,9 +310,13 @@ def get_default_decoders():
             (30, 1013, lambda v: tuple(int(i) for i in v.split())),                 # oidvector
             (114, 199, json_loads),                                                 # json
             (142, 143, lambda v: v),                                                # xml
+            (650, 651, lambda v: v),                                                # cidr
             (700, 1021, float),                                                     # float4
             (701, 1022, float),                                                     # float8
+            (774, 775, lambda v: v),                                                # macaddr8
             (790, 791, str),                                                        # money
+            (829, 1040, lambda v: v),                                               # macaddr
+            (869, 1041, lambda v: v),                                               # inet
             (1043, 1015, lambda v: v),                                              # varchar
             (1082, 1182, date.fromisoformat),                                       # date
             (1114, 1115, get_timestamp_decoder()),                                  # timestamp
