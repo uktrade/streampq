@@ -338,11 +338,11 @@ def get_default_decoders():
             (4536, 6157, get_multirange_decoder(int)),                              # int8multirange
         )), ())
 
+# It's not perfect to map infinity to min/max for date/datetimes, but it's
+# probably fine in most cases
 
 def get_date_decoder():
     def decode(raw):
-        # It's not perfect to map infinity to min/max, but it's
-        # probably fine in most cases
         return \
             date.min if raw == '-infinity' else \
             date.max if raw == 'infinity' else \
@@ -352,8 +352,6 @@ def get_date_decoder():
 
 def get_timestamp_decoder():
     def decode(raw):
-        # It's not perfect to map infinity to min/max, but it's
-        # probably fine in most cases
         return \
             datetime.min if raw == '-infinity' else \
             datetime.max if raw == 'infinity' else \
