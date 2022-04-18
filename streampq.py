@@ -318,7 +318,7 @@ def get_default_decoders():
             (829, 1040, lambda v: v),                                               # macaddr
             (869, 1041, lambda v: v),                                               # inet
             (1043, 1015, lambda v: v),                                              # varchar
-            (1082, 1182, date.fromisoformat),                                       # date
+            (1082, 1182, get_date_decoder()),                                       # date
             (1114, 1115, get_timestamp_decoder()),                                  # timestamp
             (1184, 1185, get_timestamptz_decoder()),                                # timestamptz
             (1186, 1187, get_interval_decoder()),                                   # interval
@@ -328,15 +328,21 @@ def get_default_decoders():
             (3906, 3907, get_range_decoder(Decimal)),                               # numrange
             (3908, 3909, get_range_decoder(get_timestamp_decoder())),               # tsrange
             (3910, 3911, get_range_decoder(get_timestamptz_decoder())),             # tstzrange
-            (3912, 3913, get_range_decoder(date.fromisoformat)),                    # daterange
+            (3912, 3913, get_range_decoder(get_date_decoder())),                    # daterange
             (3926, 3927, get_range_decoder(int)),                                   # int8range
             (4451, 6150, get_multirange_decoder(int)),                              # int4multirange
             (4532, 6151, get_multirange_decoder(Decimal)),                          # nummultirange
             (4533, 6152, get_multirange_decoder(get_timestamp_decoder())),          # tsmultirange
             (4534, 6153, get_multirange_decoder(get_timestamptz_decoder())),        # tstzmultirange
-            (4535, 6155, get_multirange_decoder(date.fromisoformat)),               # datemultirange
+            (4535, 6155, get_multirange_decoder(get_date_decoder())),               # datemultirange
             (4536, 6157, get_multirange_decoder(int)),                              # int8multirange
         )), ())
+
+
+def get_date_decoder():
+    def decode(raw):
+        return date.fromisoformat(raw)
+    return decode
 
 
 def get_timestamp_decoder():
