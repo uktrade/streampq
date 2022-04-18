@@ -352,7 +352,12 @@ def get_date_decoder():
 
 def get_timestamp_decoder():
     def decode(raw):
-        return datetime.strptime(raw, '%Y-%m-%d %H:%M:%S')
+        # It's not perfect to map infinity to min/max, but it's
+        # probably fine in most cases
+        return \
+            datetime.min if raw == '-infinity' else \
+            datetime.max if raw == 'infinity' else \
+            datetime.strptime(raw, '%Y-%m-%d %H:%M:%S')
     return decode
 
 
