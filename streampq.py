@@ -341,7 +341,12 @@ def get_default_decoders():
 
 def get_date_decoder():
     def decode(raw):
-        return date.fromisoformat(raw)
+        # It's not perfect to map infinity to min/max, but it's
+        # probably fine in most cases
+        return \
+            date.min if raw == '-infinity' else \
+            date.max if raw == 'infinity' else \
+            date.fromisoformat(raw)
     return decode
 
 

@@ -169,6 +169,8 @@ def test_identifier_escaping(params):
     ("'🍰'::varchar", '🍰'),
     ("'{{\"one \\\"and\",\"2\"}}'::_varchar", ('one "and', '2')),
     ("'2021-01-01'::date", date(2021, 1, 1)),
+    ("'-infinity'::date", date.min),
+    ("'infinity'::date", date.max),
     ("'{{\"2021-01-01\"}}'::_date", (date(2021, 1, 1),)),
     ("'2021-01-01 10:10:01'::timestamp", datetime(2021, 1, 1, 10, 10, 1)),
     ("'{{\"2021-01-01 10:10:01\"}}'::_timestamp", (datetime(2021, 1, 1, 10, 10, 1),)),
