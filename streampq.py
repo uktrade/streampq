@@ -312,6 +312,7 @@ def get_default_decoders():
             (142, 143, lambda v: v),                                                # xml
             (700, 1021, float),                                                     # float4
             (701, 1022, float),                                                     # float8
+            (790, 791, str),                                                        # money
             (1043, 1015, lambda v: v),                                              # varchar
             (1082, 1182, date.fromisoformat),                                       # date
             (1114, 1115, get_timestamp_decoder()),                                  # timestamp
