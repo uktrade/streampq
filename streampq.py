@@ -129,39 +129,45 @@ def streampq_connect(
 
     # Blocking using select rather than in libpq allows signals to be caught by Python.
     # Notably SIGINT will result in a KeyboardInterrupt as expected
-    def block_until(socket, events):
-        to_register = 0
-        for ev in events:
-            to_register |= ev
-        sel.register(socket, to_register)
-        try:
+    @contextmanager
+    def get_blocker(socket, events):
+
+        def block():
             while True:
                 for key, mask in sel.select():
                     for event in events:
                         if event & mask:
                             return event
+
+        to_register = 0
+        for ev in events:
+            to_register |= ev
+
+        sel.register(socket, to_register)
+        try:
+            yield block
         finally:
             sel.unregister(socket)
 
-    def flush_write(socket, conn):
+    def flush_write(block_write_read, conn):
         while True:
             incomplete = pq.PQflush(conn)
             if incomplete == -1:
                 raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
             if not incomplete:
                 break
-            ready_for = block_until(socket, (EVENT_WRITE, EVENT_READ))
+            ready_for = block_write_read()
             if ready_for == EVENT_READ:
                 ok = pq.PQconsumeInput(conn)
                 if not ok:
                     raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
 
-    def flush_read(socket, conn):
+    def flush_read(block_read, conn):
         while True:
             is_busy = pq.PQisBusy(conn)
             if not is_busy:
                 break
-            block_until(socket, (EVENT_READ,))
+            block_read()
             ok = pq.PQconsumeInput(conn)
             if not ok:
                 raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
@@ -205,7 +211,8 @@ def streampq_connect(
         if not ok:
             raise QueryError(pq.PQerrorMessage(conn).decode('utf-8'))
 
-        flush_write(socket, conn)
+        with get_blocker(socket, (EVENT_WRITE,EVENT_READ)) as block_write_read:
+            flush_write(block_write_read, conn)
 
         ok = pq.PQsetSingleRowMode(conn);
         if not ok:
@@ -217,38 +224,39 @@ def streampq_connect(
             group_key = object()
             result = c_void_p(0)
 
-            while True:
-                flush_read(socket, conn)
+            with get_blocker(socket, (EVENT_READ,)) as block_read:
+                while True:
+                    flush_read(block_read, conn)
 
-                try:
-                    result = pq.PQgetResult(conn)
-                    if not result:
-                        break
+                    try:
+                        result = pq.PQgetResult(conn)
+                        if not result:
+                            break
 
-                    status = pq.PQresultStatus(result)
-                    if status in (PGRES_COMMAND_OK, PGRES_TUPLES_OK):
-                        group_key = object()
-                        continue
+                        status = pq.PQresultStatus(result)
+                        if status in (PGRES_COMMAND_OK, PGRES_TUPLES_OK):
+                            group_key = object()
+                            continue
 
-                    if status != PGRES_SINGLE_TUPLE:
-                        raise QueryError(pq.PQerrorMessage(conn).decode('utf-8'))
+                        if status != PGRES_SINGLE_TUPLE:
+                            raise QueryError(pq.PQerrorMessage(conn).decode('utf-8'))
 
-                    num_columns = pq.PQnfields(result)
-                    columns = tuple(
-                        pq.PQfname(result, i).decode('utf-8')
-                        for i in range(0, num_columns)
-                    )
-                    values = tuple(
-                        decoders_dict.get(
-                            None if pq.PQgetisnull(result, 0, i) else \
-                            pq.PQftype(result, i), identity)(pq.PQgetvalue(result, 0, i).decode('utf-8'))
-                        for i in range(0, num_columns)
-                    )
+                        num_columns = pq.PQnfields(result)
+                        columns = tuple(
+                            pq.PQfname(result, i).decode('utf-8')
+                            for i in range(0, num_columns)
+                        )
+                        values = tuple(
+                            decoders_dict.get(
+                                None if pq.PQgetisnull(result, 0, i) else \
+                                pq.PQftype(result, i), identity)(pq.PQgetvalue(result, 0, i).decode('utf-8'))
+                            for i in range(0, num_columns)
+                        )
 
-                    yield (group_key, columns), values
-                finally:
-                    pq.PQclear(result)
-                    result = c_void_p(0)
+                        yield (group_key, columns), values
+                    finally:
+                        pq.PQclear(result)
+                        result = c_void_p(0)
 
             set_query_running(False)
 
