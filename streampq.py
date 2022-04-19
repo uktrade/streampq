@@ -134,12 +134,14 @@ def streampq_connect(
         for ev in events:
             to_register |= ev
         sel.register(socket, to_register)
-        while True:
-            for key, mask in sel.select():
-                for event in events:
-                    if event & mask:
-                        sel.unregister(socket)
-                        return event
+        try:
+            while True:
+                for key, mask in sel.select():
+                    for event in events:
+                        if event & mask:
+                            return event
+        finally:
+            sel.unregister(socket)
 
     def flush_write(sel, socket, conn):
         while True:
