@@ -20,6 +20,7 @@ def streampq_connect(
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
     pq = get_libpq()
+    sel = DefaultSelector()
 
     literal_encoders_array_types_set = set(get_literal_encoders_array_types())
     literal_encoders_dict = dict(get_literal_encoders())
@@ -98,13 +99,12 @@ def streampq_connect(
                 raise ConnectionError(pq.PQerrorMessage(conn).decode('utf-8'))
 
             socket = pq.PQsocket(conn)
-            sel = DefaultSelector()
-            yield sel, socket, conn
+            yield socket, conn
         finally:
             pq.PQfinish(conn)
 
     @contextmanager
-    def cancel_query(sel, socket, conn):
+    def cancel_query(socket, conn):
         query_running = False
 
         def set_needs_cancel(new_query_running):
@@ -129,7 +129,7 @@ def streampq_connect(
 
     # Blocking using select rather than in libpq allows signals to be caught by Python.
     # Notably SIGINT will result in a KeyboardInterrupt as expected
-    def block_until(sel, socket, events):
+    def block_until(socket, events):
         to_register = 0
         for ev in events:
             to_register |= ev
@@ -143,27 +143,27 @@ def streampq_connect(
         finally:
             sel.unregister(socket)
 
-    def flush_write(sel, socket, conn):
+    def flush_write(socket, conn):
         while True:
             incomplete = pq.PQflush(conn)
             if incomplete == -1:
                 raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
             if not incomplete:
                 break
-            ready_for = block_until(sel, socket, (EVENT_WRITE, EVENT_READ))
+            ready_for = block_until(socket, (EVENT_WRITE, EVENT_READ))
             if ready_for == EVENT_READ:
                 ok = pq.PQconsumeInput(conn)
                 if not ok:
                     raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
 
-        block_until(sel, socket, (EVENT_READ,))
+        block_until(socket, (EVENT_READ,))
 
-    def flush_read(sel, socket, conn):
+    def flush_read(socket, conn):
         while True:
             is_busy = pq.PQisBusy(conn)
             if not is_busy:
                 break
-            block_until(sel, socket, (EVENT_READ,))
+            block_until(socket, (EVENT_READ,))
             ok = pq.PQconsumeInput(conn)
             if not ok:
                 raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
@@ -197,7 +197,7 @@ def streampq_connect(
             _value_encode(value)
 
 
-    def query(sel, socket, conn, set_query_running, sql, literals=(), identifiers=()):
+    def query(socket, conn, set_query_running, sql, literals=(), identifiers=()):
         set_query_running(True)
 
         ok = pq.PQsendQuery(conn, sql.format(**dict(
@@ -207,7 +207,7 @@ def streampq_connect(
         if not ok:
             raise QueryError(pq.PQerrorMessage(conn).decode('utf-8'))
 
-        flush_write(sel, socket, conn)
+        flush_write(socket, conn)
 
         ok = pq.PQsetSingleRowMode(conn);
         if not ok:
@@ -220,7 +220,7 @@ def streampq_connect(
             result = c_void_p(0)
 
             while True:
-                flush_read(sel, socket, conn)
+                flush_read(socket, conn)
 
                 try:
                     result = pq.PQgetResult(conn)
@@ -265,10 +265,10 @@ def streampq_connect(
         return with_columns
 
     with \
-            get_conn() as (sel, socket, conn), \
-            cancel_query(sel, socket, conn) as set_query_running:
+            get_conn() as (socket, conn), \
+            cancel_query(socket, conn) as set_query_running:
 
-        yield partial(query, sel, socket, conn, set_query_running)
+        yield partial(query, socket, conn, set_query_running)
 
 
 def get_default_literal_encoders():
