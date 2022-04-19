@@ -156,8 +156,6 @@ def streampq_connect(
                 if not ok:
                     raise CommunicationError(pq.PQerrorMessage(conn).decode('utf-8'))
 
-        block_until(socket, (EVENT_READ,))
-
     def flush_read(socket, conn):
         while True:
             is_busy = pq.PQisBusy(conn)
