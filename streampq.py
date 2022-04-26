@@ -33,68 +33,67 @@ def streampq_connect(
 
     identity = lambda v: v
 
-    pq.PQconnectdbParams.restype = c_void_p
-    pq.PQsocket.argtypes = (c_void_p,)
-    pq.PQsetnonblocking.argtypes = (c_void_p, c_int)
-    pq.PQflush.argtypes = (c_void_p,)
-    pq.PQconsumeInput.argtypes = (c_void_p,)
-    pq.PQisBusy.argtypes = (c_void_p,)
-    pq.PQfinish.argtypes = (c_void_p,)
-    pq.PQstatus.argtypes = (c_void_p,)
-
-    pq.PQgetCancel.argtypes = (c_void_p,)
-    pq.PQgetCancel.restype = c_void_p
-    pq.PQcancel.argtypes = (c_void_p, c_char_p, c_int)
-    pq.PQfreeCancel.argtypes = (c_void_p,)
-
-    pq.PQescapeLiteral.argtypes = (c_void_p, c_char_p, c_size_t)
-    pq.PQescapeLiteral.restype = c_void_p
-    pq.PQescapeIdentifier.argtypes = (c_void_p, c_char_p, c_size_t)
-    pq.PQescapeIdentifier.restype = c_void_p
-    pq.PQfreemem.argtypes = (c_void_p,)
-
-    pq.PQsendQuery.argtypes = (c_void_p, c_char_p)
-    pq.PQsetSingleRowMode.argtypes = (c_void_p,)
-    pq.PQgetResult.argtypes = (c_void_p,)
-    pq.PQgetResult.restype = c_void_p
-    pq.PQresultStatus.argtypes = (c_void_p,)
-    pq.PQnfields.argtypes = (c_void_p,)
-    pq.PQfname.argtypes = (c_void_p, c_int)
-    pq.PQfname.restype = c_char_p
-    pq.PQgetisnull.argtypes = (c_void_p, c_int, c_int)
-    pq.PQgetvalue.argtypes = (c_void_p, c_int, c_int)
-    pq.PQgetvalue.restype = c_char_p
-    pq.PQftype.argtypes = (c_void_p, c_int)
-    pq.PQclear.argtypes = (c_void_p,)
-
-    pq.PQerrorMessage.argtypes = (c_void_p,)
-    pq.PQerrorMessage.restype = c_char_p
-
     PQconnectdbParams = pq.PQconnectdbParams
+    PQconnectdbParams.restype = c_void_p
     PQsocket = pq.PQsocket
+    PQsocket.argtypes = (c_void_p,)
     PQsetnonblocking = pq.PQsetnonblocking
+    PQsetnonblocking.argtypes = (c_void_p, c_int)
     PQflush = pq.PQflush
+    PQflush.argtypes = (c_void_p,)
     PQconsumeInput = pq.PQconsumeInput
+    PQconsumeInput.argtypes = (c_void_p,)
     PQisBusy = pq.PQisBusy
+    PQisBusy.argtypes = (c_void_p,)
     PQfinish = pq.PQfinish
+    PQfinish.argtypes = (c_void_p,)
     PQstatus = pq.PQstatus
+    PQstatus.argtypes = (c_void_p,)
+
     PQgetCancel = pq.PQgetCancel
+    PQgetCancel.argtypes = (c_void_p,)
+    PQgetCancel.restype = c_void_p
     PQcancel = pq.PQcancel
+    PQcancel.argtypes = (c_void_p, c_char_p, c_int)
     PQfreeCancel = pq.PQfreeCancel
+    PQfreeCancel.argtypes = (c_void_p,)
+
     PQescapeLiteral = pq.PQescapeLiteral
+    PQescapeLiteral.argtypes = (c_void_p, c_char_p, c_size_t)
+    PQescapeLiteral.restype = c_void_p
     PQescapeIdentifier = pq.PQescapeIdentifier
+    PQescapeIdentifier.argtypes = (c_void_p, c_char_p, c_size_t)
+    PQescapeIdentifier.restype = c_void_p
     PQfreemem = pq.PQfreemem
+    PQfreemem.argtypes = (c_void_p,)
+
     PQsendQuery = pq.PQsendQuery
+    PQsendQuery.argtypes = (c_void_p, c_char_p)
     PQsetSingleRowMode = pq.PQsetSingleRowMode
+    PQsetSingleRowMode.argtypes = (c_void_p,)
     PQgetResult = pq.PQgetResult
+    PQgetResult.argtypes = (c_void_p,)
+    PQgetResult.restype = c_void_p
     PQresultStatus = pq.PQresultStatus
+    PQresultStatus.argtypes = (c_void_p,)
     PQnfields= pq.PQnfields
+    PQnfields.argtypes = (c_void_p,)
     PQfname = pq.PQfname
+    PQfname.argtypes = (c_void_p, c_int)
+    PQfname.restype = c_char_p
     PQgetisnull = pq.PQgetisnull
+    PQgetisnull.argtypes = (c_void_p, c_int, c_int)
     PQgetvalue = pq.PQgetvalue
+    PQgetvalue.argtypes = (c_void_p, c_int, c_int)
+    PQgetvalue.restype = c_char_p
     PQftype = pq.PQftype
+    PQftype.argtypes = (c_void_p, c_int)
     PQclear = pq.PQclear
+    PQclear.argtypes = (c_void_p,)
+
     PQerrorMessage = pq.PQerrorMessage
+    PQerrorMessage.argtypes = (c_void_p,)
+    PQerrorMessage.restype = c_char_p
 
     PGRES_COMMAND_OK = 1
     PGRES_TUPLES_OK = 2
