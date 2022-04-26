@@ -134,7 +134,7 @@ def streampq_connect(
 
         def block():
             while True:
-                for (_, fd, _, _), mask in sel.select():
+                for _, mask in sel.select():
                     for event in events:
                         if event & mask:
                             return event
