@@ -378,11 +378,15 @@ def get_default_decoders():
 # probably fine in most cases
 
 def get_date_decoder():
+    date_min = date.min
+    date_max = date.max
+    fromisoformat = date.fromisoformat
+
     def decode(raw):
         return \
-            date.min if raw == '-infinity' else \
-            date.max if raw == 'infinity' else \
-            date.fromisoformat(raw)
+            date_min if raw == '-infinity' else \
+            date_max if raw == 'infinity' else \
+            fromisoformat(raw)
     return decode
 
 
