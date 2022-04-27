@@ -565,6 +565,11 @@ def get_array_decoder(value_decoder):
     IN_QUOTED = object()
     IN_QUOTED_ESCAPE = object()
 
+    append = list.append
+    pop = list.pop
+    join = str.join
+    _tuple = tuple
+
     def decode(raw):
         state = OUT
         stack = [[]]
@@ -573,42 +578,42 @@ def get_array_decoder(value_decoder):
         for c in raw:
             if state is OUT:
                 if c == '{':
-                    stack.append([])
+                    append(stack, [])
                 elif c == '}':
-                    stack[-2].append(tuple(stack.pop()))
+                    append(stack[-2], _tuple(pop(stack)))
                 elif c == ',':
                     pass
                 elif c == '"':
                     state = IN_QUOTED
                 else:
-                    value.append(c)
+                    append(value, c)
                     state = IN_UNQUOTED
             elif state is IN_UNQUOTED:
                 if c == '}':
-                    value_str = ''.join(value)
+                    value_str = join('', value)
                     value = []
-                    stack[-1].append(None if value_str == 'NULL' else value_decoder(value_str))
-                    stack[-2].append(tuple(stack.pop()))
+                    append(stack[-1], None if value_str == 'NULL' else value_decoder(value_str))
+                    append(stack[-2], _tuple(pop(stack)))
                     state = OUT
                 elif c == ',':
-                    value_str = ''.join(value)
+                    value_str = join('', value)
                     value = []
-                    stack[-1].append(None if value_str == 'NULL' else value_decoder(value_str))
+                    append(stack[-1], None if value_str == 'NULL' else value_decoder(value_str))
                     state = OUT
                 else:
-                    value.append(c)
+                    append(value, c)
             elif state is IN_QUOTED:
                 if c == '"':
-                    value_str = ''.join(value)
+                    value_str = join('', value)
                     value = []
-                    stack[-1].append(value_decoder(value_str))
+                    append(stack[-1], value_decoder(value_str))
                     state = OUT
                 elif c == '\\':
                     state = IN_QUOTED_ESCAPE
                 else:
-                    value.append(c)
+                    append(value, c)
             elif state is IN_QUOTED_ESCAPE:
-                value.append(c)
+                append(value, c)
                 state = IN_QUOTED
 
         return stack[0][0]
