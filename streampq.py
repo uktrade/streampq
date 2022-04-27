@@ -429,13 +429,18 @@ def get_timestamptz_decoder():
 
 def get_interval_decoder():
     interval_regex = re.compile(r'((?P<years>-?\d+) years?)?( ?(?P<months>-?\d+) mons?)?( ?(?P<days>-?\d+) days?)?( ?(?P<sign>-)(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>.*))?')
+    re_match = re.match
+    group = re.Match.group
+    _int = int
+    _Decimal = Decimal
+
     def decode(raw):
-        m = re.match(interval_regex, raw)
+        m = re_match(interval_regex, raw)
         years, months, days, hours, minutes, seconds = (
-            func(m.group(name)) if m.group(name) else 0
-            for func, name in ((int, 'years'), (int, 'months'), (int, 'days'), (int, 'hours'), (int, 'minutes'), (Decimal, 'seconds'))
+            func(group(m, name)) if group(m ,name) else 0
+            for func, name in ((_int, 'years'), (_int, 'months'), (_int, 'days'), (_int, 'hours'), (_int, 'minutes'), (_Decimal, 'seconds'))
         )
-        sign = -1 if m.group('sign') == '-' else 1
+        sign = -1 if group(m, 'sign') == '-' else 1
         return Interval(years=years, months=months, days=days, hours=sign*hours, minutes=sign*minutes, seconds=sign*seconds)
 
     return decode
