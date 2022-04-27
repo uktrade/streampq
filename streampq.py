@@ -451,6 +451,9 @@ def get_range_decoder(value_decoder):
     IN_UNQUOTED = object()
     IN_QUOTED = object()
 
+    append = list.append
+    join = str.join
+
     def decode(raw):
         state = OUT
         bounds = []
@@ -460,35 +463,35 @@ def get_range_decoder(value_decoder):
         for c in raw:
             if state is OUT:
                 if c in '([])':
-                    bounds.append(c)
+                    append(bounds, c)
                 elif c == '"':
                     state = IN_QUOTED
                 elif c == ',':
                     pass
                 else:
-                    value.append(c)
+                    append(value, c)
                     state = IN_UNQUOTED
             elif state is IN_UNQUOTED:
                 if c in ')]':
-                    values.append(value_decoder(''.join(value)) if value else None)
-                    bounds.append(c)
+                    append(values, value_decoder(join('', value)) if value else None)
+                    append(bounds, c)
                     value = []
                     state = OUT
                 elif c in ',':
-                    values.append(value_decoder(''.join(value)) if value else None)
+                    append(values, value_decoder(join('', value)) if value else None)
                     value = []
                     state = OUT
                 else:
-                    value.append(c)
+                    append(value, c)
             elif state is IN_QUOTED:
                 if c == '"':
-                    values.append(value_decoder(''.join(value)))
+                    append(values, value_decoder(join('', value)))
                     value = []
                     state = OUT
                 else:
-                    value.append(c)
+                    append(value, c)
 
-        return Range(lower=values[0], upper=values[1], bounds=''.join(bounds))
+        return Range(lower=values[0], upper=values[1], bounds=join('', bounds))
 
     return decode
 
