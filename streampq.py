@@ -453,6 +453,7 @@ def get_range_decoder(value_decoder):
 
     append = list.append
     join = str.join
+    _Range = Range
 
     def decode(raw):
         state = OUT
@@ -491,7 +492,7 @@ def get_range_decoder(value_decoder):
                 else:
                     append(value, c)
 
-        return Range(lower=values[0], upper=values[1], bounds=join('', bounds))
+        return _Range(lower=values[0], upper=values[1], bounds=join('', bounds))
 
     return decode
 
