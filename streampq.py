@@ -391,11 +391,15 @@ def get_date_decoder():
 
 
 def get_timestamp_decoder():
+    datetime_min = datetime.min
+    datetime_max = datetime.max
+    strptime = datetime.strptime
+
     def decode(raw):
         return \
-            datetime.min if raw == '-infinity' else \
-            datetime.max if raw == 'infinity' else \
-            datetime.strptime(raw, '%Y-%m-%d %H:%M:%S')
+            datetime_min if raw == '-infinity' else \
+            datetime_max if raw == 'infinity' else \
+            strptime(raw, '%Y-%m-%d %H:%M:%S')
     return decode
 
 
