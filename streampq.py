@@ -413,12 +413,16 @@ def get_timestamp_decoder():
 
 
 def get_timestamptz_decoder():
+    datetime_min = datetime.min
+    datetime_max = datetime.max
+    strptime = datetime.strptime
+
     def decode(raw):
         # Infinities don't come with a timezone, so we just use 0-offset
         return \
-            datetime.min.replace(tzinfo=timezone(timedelta())) if raw == '-infinity' else \
-            datetime.max.replace(tzinfo=timezone(timedelta())) if raw == 'infinity' else \
-            datetime.strptime('{:<024}'.format(raw), '%Y-%m-%d %H:%M:%S%z')
+            datetime_min.replace(tzinfo=timezone(timedelta())) if raw == '-infinity' else \
+            datetime_max.replace(tzinfo=timezone(timedelta())) if raw == 'infinity' else \
+            strptime('{:<024}'.format(raw), '%Y-%m-%d %H:%M:%S%z')
     return decode
 
 
