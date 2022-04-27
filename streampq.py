@@ -319,7 +319,8 @@ def get_default_literal_encoders_array_types():
 
 
 def get_default_decoders():
-    # Returns tuple of oid, decoder pairs
+    # Returns tuple of oid, array_oid, and decoder
+
     identity = lambda v: v
 
     return \
