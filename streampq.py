@@ -502,6 +502,11 @@ def get_multirange_decoder(value_decoder):
     IN_UNQUOTED = object()
     IN_QUOTED = object()
 
+    append = list.append
+    join = str.join
+    _tuple = tuple
+    _Range = Range
+
     def decode(raw):
         state = OUT
         ranges = []
@@ -512,10 +517,10 @@ def get_multirange_decoder(value_decoder):
         for c in raw:
             if state is OUT:
                 if c in '([':
-                    bounds.append(c)
+                    append(bounds, c)
                 elif c in '])':
-                    bounds.append(c)
-                    ranges.append(Range(lower=values[0], upper=values[1], bounds=''.join(bounds)))
+                    append(bounds, c)
+                    append(ranges, _Range(lower=values[0], upper=values[1], bounds=join('', bounds)))
                     bounds = []
                     values = []
                 elif c == '"':
@@ -523,32 +528,32 @@ def get_multirange_decoder(value_decoder):
                 elif c in '{,}':
                     pass
                 else:
-                    value.append(c)
+                    append(value, c)
                     state = IN_UNQUOTED
             elif state is IN_UNQUOTED:
                 if c in ')]':
-                    values.append(value_decoder(''.join(value)) if value else None)
-                    bounds.append(c)
-                    ranges.append(Range(lower=values[0], upper=values[1], bounds=''.join(bounds)))
+                    append(values, value_decoder(join('', value)) if value else None)
+                    append(bounds, c)
+                    append(ranges, _Range(lower=values[0], upper=values[1], bounds=''.join(bounds)))
                     bounds = []
                     values = []
                     value = []
                     state = OUT
                 elif c in ',':
-                    values.append(value_decoder(''.join(value)) if value else None)
+                    append(values, value_decoder(''.join(value)) if value else None)
                     value = []
                     state = OUT
                 else:
-                    value.append(c)
+                    append(value, c)
             elif state is IN_QUOTED:
                 if c == '"':
-                    values.append(value_decoder(''.join(value)))
+                    append(values, value_decoder(''.join(value)))
                     value = []
                     state = OUT
                 else:
-                    value.append(c)
+                    append(value, c)
 
-        return tuple(ranges)
+        return _tuple(ranges)
 
     return decode
 
