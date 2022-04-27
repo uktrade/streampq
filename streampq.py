@@ -320,6 +320,8 @@ def get_default_literal_encoders_array_types():
 
 def get_default_decoders():
     # Returns tuple of oid, decoder pairs
+    identity = lambda v: v
+
     return \
         ((None, lambda _: None),) + \
         sum(tuple((
@@ -328,29 +330,29 @@ def get_default_decoders():
         ) for oid, array_oid, value_decoder in (
             (16, 1000, lambda v: v == 't'),                                         # bool
             (17, 1001, lambda v: bytes.fromhex(v.lstrip('\\x'))),                   # bytea
-            (18, 1002, lambda v: v),                                                # char
-            (19, 1003, lambda v: v),                                                # name
+            (18, 1002, identity),                                                   # char
+            (19, 1003, identity),                                                   # name
             (20, 1016, int),                                                        # int8
             (21, 1005, int),                                                        # int2
             (22, 1006, lambda v: tuple(int(i) for i in v.split())),                 # int2vector
             (23, 1007, int),                                                        # int4
-            (24, 1008, lambda v: v),                                                # regproc
-            (25, 1009, lambda v: v),                                                # text
+            (24, 1008, identity),                                                   # regproc
+            (25, 1009, identity),                                                   # text
             (26, 1028, int),                                                        # oid
             (27, 1010, lambda v: tuple(int(i) for i in v.strip('()').split(','))),  # tid
             (28, 1011, int),                                                        # xid
             (29, 1012, int),                                                        # cid
             (30, 1013, lambda v: tuple(int(i) for i in v.split())),                 # oidvector
             (114, 199, json_loads),                                                 # json
-            (142, 143, lambda v: v),                                                # xml
-            (650, 651, lambda v: v),                                                # cidr
+            (142, 143, identity),                                                   # xml
+            (650, 651, identity),                                                   # cidr
             (700, 1021, float),                                                     # float4
             (701, 1022, float),                                                     # float8
-            (774, 775, lambda v: v),                                                # macaddr8
-            (790, 791, lambda v: v),                                                # money
-            (829, 1040, lambda v: v),                                               # macaddr
-            (869, 1041, lambda v: v),                                               # inet
-            (1043, 1015, lambda v: v),                                              # varchar
+            (774, 775, identity),                                                   # macaddr8
+            (790, 791, identity),                                                   # money
+            (829, 1040, identity),                                                  # macaddr
+            (869, 1041, identity),                                                  # inet
+            (1043, 1015, identity),                                                 # varchar
             (1082, 1182, get_date_decoder()),                                       # date
             (1114, 1115, get_timestamp_decoder()),                                  # timestamp
             (1184, 1185, get_timestamptz_decoder()),                                # timestamptz
