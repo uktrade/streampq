@@ -437,11 +437,10 @@ def get_interval_decoder():
     def decode(raw):
         m = re_match(interval_regex, raw)
         sign = -1 if group(m, 'sign') == '-' else 1
-        years, months, days, hours, minutes, seconds = (
+        return Interval(*(
             func(group(m, name)) * sign if group(m ,name) else 0
             for func, name, sign in ((_int, 'years', 1), (_int, 'months', 1), (_int, 'days', 1), (_int, 'hours', sign), (_int, 'minutes', sign), (_Decimal, 'seconds', sign))
-        )
-        return Interval(years=years, months=months, days=days, hours=hours, minutes=minutes, seconds=seconds)
+        ))
 
     return decode
 
