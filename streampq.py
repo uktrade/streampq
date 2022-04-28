@@ -27,6 +27,7 @@ def streampq_connect(
     _c_size_t = c_size_t
 
     _dict = dict
+    _len = len
     _object = object
     _tuple = tuple
     bytes_decode = bytes.decode
@@ -114,7 +115,7 @@ def streampq_connect(
 
     def as_null_terminated_array(strings):
         char_ps = _tuple(_c_char_p(str_encode(string, 'utf-8')) for string in strings) + (None,)
-        return (_c_char_p * len(char_ps))(*char_ps)
+        return (_c_char_p * _len(char_ps))(*char_ps)
 
     params_tuple = _tuple(params)
     keywords = as_null_terminated_array((key for key, value in params_tuple))
@@ -219,7 +220,7 @@ def streampq_connect(
             string_encoded_bytes = str_encode(string_encoded, 'utf-8')
             escaped_p = _c_void_p(0)
             try:
-                escaped_p = func(conn, string_encoded_bytes, len(string_encoded_bytes))
+                escaped_p = func(conn, string_encoded_bytes, _len(string_encoded_bytes))
                 if not escaped_p:
                     raise StreamPQError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
                 escaped_str = bytes_decode(_cast(escaped_p, _c_char_p).value, 'utf-8')
