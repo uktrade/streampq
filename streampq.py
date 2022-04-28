@@ -286,12 +286,13 @@ def streampq_connect(
                             group_key = _object()
                             num_columns = None
                             column_names = None
+                            column_decoders = None
                             continue
 
                         if status != PGRES_SINGLE_TUPLE:
                             raise QueryError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
-                        if column_names == None:
+                        if num_columns == None:
                             num_columns = PQnfields(result)
                             column_names = _tuple(
                                 bytes_decode(PQfname(result, i), 'utf-8')
