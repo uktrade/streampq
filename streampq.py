@@ -457,12 +457,12 @@ def get_interval_decoder():
         m = re_match(interval_regex, raw)
         sign = -1 if group(m, 'sign') == '-' else 1
         return _Interval(*(
-            int(group(m, 'years') or '0'),
-            int(group(m, 'months') or '0'),
-            int(group(m, 'days') or '0'),
-            int(group(m, 'hours') or '0') * sign,
-            int(group(m, 'minutes') or '0') * sign,
-            Decimal(group(m, 'seconds') or '0') * sign or Decimal('0'),
+            _int(group(m, 'years') or '0'),
+            _int(group(m, 'months') or '0'),
+            _int(group(m, 'days') or '0'),
+            _int(group(m, 'hours') or '0') * sign,
+            _int(group(m, 'minutes') or '0') * sign,
+            _Decimal(group(m, 'seconds') or '0') * sign or _Decimal('0'),
         ))
 
     return decode
