@@ -29,6 +29,7 @@ def streampq_connect(
     _dict = dict
     _len = len
     _object = object
+    _range = range
     _tuple = tuple
     bytes_decode = bytes.decode
     str_encode = str.encode
@@ -287,13 +288,13 @@ def streampq_connect(
                         num_columns = PQnfields(result)
                         columns = _tuple(
                             bytes_decode(PQfname(result, i), 'utf-8')
-                            for i in range(0, num_columns)
+                            for i in _range(0, num_columns)
                         )
                         values = _tuple(
                             dict_get(decoders_dict,
                                 None if PQgetisnull(result, 0, i) else \
                                 PQftype(result, i), identity)(bytes_decode(PQgetvalue(result, 0, i), 'utf-8'))
-                            for i in range(0, num_columns)
+                            for i in _range(0, num_columns)
                         )
 
                         yield (group_key, columns), values
