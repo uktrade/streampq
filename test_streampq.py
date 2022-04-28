@@ -229,7 +229,7 @@ def test_interval_decoders_no_sign_seconds(params, sql_value, python_value):
     assert not result.seconds.is_signed()
 
 
-@pytest.mark.skipif(os.environ.get('POSTGRES_VERSION') == '13.6', reason='multiranges not available before PostgreSQL 14')
+@pytest.mark.skipif(float(os.environ.get('POSTGRES_VERSION', '0')) < 14.0, reason='multiranges not available before PostgreSQL 14')
 @pytest.mark.parametrize("sql_value,python_value", [
     ("'{{[1,2],[5,6]}}'::int4multirange", (Range(1,3,'[)'),Range(5,7,'[)'))),
     ("ARRAY['{{[1,2]}}']::_int4multirange", ((Range(1,3,'[)'),),)),

@@ -71,7 +71,7 @@ jobs:
           name: Upload coverage
           command: |
             set -exu
-            ~/workspace/cc-test-reporter sum-coverage ~/workspace/coverage/*.json -p 6
+            ~/workspace/cc-test-reporter sum-coverage ~/workspace/coverage/*.json -p 9
             ~/workspace/cc-test-reporter upload-coverage
 
 workflows:
@@ -90,6 +90,7 @@ workflows:
               postgres-version:
                 - "14.2"
                 - "13.6"
+                - "12.10"
 
       - upload-coverage:
           requires:
