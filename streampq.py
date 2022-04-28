@@ -36,6 +36,9 @@ def streampq_connect(
 
     pq = get_libpq()
     sel = DefaultSelector()
+    sel_register = sel.register
+    sel_unregister = sel.unregister
+    sel_select = sel.select
 
     literal_encoders_array_types_set = set(get_literal_encoders_array_types())
     literal_encoders_dict = _dict(get_literal_encoders())
@@ -174,7 +177,7 @@ def streampq_connect(
 
         def block():
             while True:
-                for _, mask in sel.select():
+                for _, mask in sel_select():
                     for event in events:
                         if event & mask:
                             return event
@@ -183,11 +186,11 @@ def streampq_connect(
         for ev in events:
             to_register |= ev
 
-        sel.register(socket, to_register)
+        sel_register(socket, to_register)
         try:
             yield block
         finally:
-            sel.unregister(socket)
+            sel_unregister(socket)
 
     def flush_write(block_write_read, conn):
         while True:
