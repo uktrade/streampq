@@ -29,6 +29,8 @@ def streampq_connect(
     _dict = dict
     _object = object
     _tuple = tuple
+    bytes_decode = bytes.decode
+    str_encode = str.encode
 
     pq = get_libpq()
     sel = DefaultSelector()
@@ -111,7 +113,7 @@ def streampq_connect(
     PGRES_SINGLE_TUPLE = 9
 
     def as_null_terminated_array(strings):
-        char_ps = _tuple(_c_char_p(string.encode('utf-8')) for string in strings) + (None,)
+        char_ps = _tuple(_c_char_p(str_encode(string, 'utf-8')) for string in strings) + (None,)
         return (_c_char_p * len(char_ps))(*char_ps)
 
     params_tuple = _tuple(params)
@@ -128,11 +130,11 @@ def streampq_connect(
 
             status = PQstatus(conn)
             if status:
-                raise ConnectionError(PQerrorMessage(conn).decode('utf-8'))
+                raise ConnectionError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
             ok = PQsetnonblocking(conn, 1)
             if ok != 0:
-                raise ConnectionError(PQerrorMessage(conn).decode('utf-8'))
+                raise ConnectionError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
             socket = PQsocket(conn)
             yield socket, conn
@@ -155,11 +157,11 @@ def streampq_connect(
                 try:
                     pg_cancel = PQgetCancel(conn)
                     if not pg_cancel:
-                        raise CancelError(PQerrorMessage(conn).decode('utf-8'))
+                        raise CancelError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
                     buf = _create_string_buffer(256)
                     ok = PQcancel(pg_cancel, buf, 256)
                     if not ok:
-                        raise CancelError(buf.raw.rstrip(b'\x00').decode('utf-8'))
+                        raise CancelError(bytes_decode(buf.raw.rstrip(b'\x00'), 'utf-8'))
                 finally:
                     PQfreeCancel(pg_cancel)
 
@@ -189,14 +191,14 @@ def streampq_connect(
         while True:
             incomplete = PQflush(conn)
             if incomplete == -1:
-                raise CommunicationError(PQerrorMessage(conn).decode('utf-8'))
+                raise CommunicationError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
             if not incomplete:
                 break
             ready_for = block_write_read()
             if ready_for == EVENT_READ:
                 ok = PQconsumeInput(conn)
                 if not ok:
-                    raise CommunicationError(PQerrorMessage(conn).decode('utf-8'))
+                    raise CommunicationError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
     def flush_read(block_read, conn):
         while True:
@@ -206,7 +208,7 @@ def streampq_connect(
             block_read()
             ok = PQconsumeInput(conn)
             if not ok:
-                raise CommunicationError(PQerrorMessage(conn).decode('utf-8'))
+                raise CommunicationError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
     def encode(conn, value, func, array_types_set, encoders_dict):
         def _value_encode(value):
@@ -214,13 +216,13 @@ def streampq_connect(
             string_encoded = encoder(value)
             if not must_escape:
                 return string_encoded
-            string_encoded_bytes = string_encoded.encode('utf-8')
+            string_encoded_bytes = str_encode(string_encoded, 'utf-8')
             escaped_p = _c_void_p(0)
             try:
                 escaped_p = func(conn, string_encoded_bytes, len(string_encoded_bytes))
                 if not escaped_p:
-                    raise StreamPQError(PQerrorMessage(conn).decode('utf-8'))
-                escaped_str = _cast(escaped_p, _c_char_p).value.decode('utf-8')
+                    raise StreamPQError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
+                escaped_str = bytes_decode(_cast(escaped_p, _c_char_p).value, 'utf-8')
             finally:
                 PQfreemem(escaped_p)
 
@@ -240,19 +242,19 @@ def streampq_connect(
     def query(socket, conn, set_query_running, sql, literals=(), identifiers=()):
         set_query_running(True)
 
-        ok = PQsendQuery(conn, sql.format(**_dict(
+        ok = PQsendQuery(conn, str_encode(sql.format(**_dict(
             _tuple((key, encode(conn, value, PQescapeLiteral, literal_encoders_array_types_set, literal_encoders_dict)) for key, value in literals) +
             _tuple((key, encode(conn, value, PQescapeIdentifier, identifier_encoders_array_types_set, identifier_encoders_dict)) for key, value in identifiers)
-        )).encode('utf-8'));
+        )), 'utf-8'));
         if not ok:
-            raise QueryError(PQerrorMessage(conn).decode('utf-8'))
+            raise QueryError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
         with get_blocker(socket, (EVENT_WRITE,EVENT_READ)) as block_write_read:
             flush_write(block_write_read, conn)
 
         ok = PQsetSingleRowMode(conn);
         if not ok:
-            raise QueryError(PQerrorMessage(conn).decode('utf-8'))
+            raise QueryError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
         def get_results():
             # So we can use groupby to separate rows for different statements
@@ -275,17 +277,17 @@ def streampq_connect(
                             continue
 
                         if status != PGRES_SINGLE_TUPLE:
-                            raise QueryError(PQerrorMessage(conn).decode('utf-8'))
+                            raise QueryError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
                         num_columns = PQnfields(result)
                         columns = _tuple(
-                            PQfname(result, i).decode('utf-8')
+                            bytes_decode(PQfname(result, i), 'utf-8')
                             for i in range(0, num_columns)
                         )
                         values = _tuple(
                             decoders_dict.get(
                                 None if PQgetisnull(result, 0, i) else \
-                                PQftype(result, i), identity)(PQgetvalue(result, 0, i).decode('utf-8'))
+                                PQftype(result, i), identity)(bytes_decode(PQgetvalue(result, 0, i), 'utf-8'))
                             for i in range(0, num_columns)
                         )
 
