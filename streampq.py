@@ -268,7 +268,7 @@ def streampq_connect(
             group_key = _object()
             result = _c_void_p(0)
             num_columns = None
-            columns = None
+            column_names = None
 
             with get_blocker(socket, (EVENT_READ,)) as block_read:
                 while True:
@@ -283,15 +283,15 @@ def streampq_connect(
                         if status in (PGRES_COMMAND_OK, PGRES_TUPLES_OK):
                             group_key = _object()
                             num_columns = None
-                            columns = None
+                            column_names = None
                             continue
 
                         if status != PGRES_SINGLE_TUPLE:
                             raise QueryError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
-                        if columns == None:
+                        if column_names == None:
                             num_columns = PQnfields(result)
-                            columns = _tuple(
+                            column_names = _tuple(
                                 bytes_decode(PQfname(result, i), 'utf-8')
                                 for i in _range(0, num_columns)
                             )
@@ -303,7 +303,7 @@ def streampq_connect(
                             for i in _range(0, num_columns)
                         )
 
-                        yield (group_key, columns), values
+                        yield (group_key, column_names), values
                     finally:
                         PQclear(result)
                         result = _c_void_p(0)
@@ -311,8 +311,8 @@ def streampq_connect(
             set_query_running(False)
 
         def get_columns(grouped_results):
-            for (_, columns), rows in grouped_results:
-                yield columns, (row[1] for row in rows)
+            for (_, column_names), rows in grouped_results:
+                yield column_names, (row[1] for row in rows)
 
         results = get_results()
         grouped_results = groupby(results, key=lambda key_columns_row: key_columns_row[0])
