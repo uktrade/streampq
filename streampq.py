@@ -624,7 +624,7 @@ def get_array_decoder(value_decoder):
     return decode
 
 
-Interval = namedtuple('Interval', ['years', 'months', 'days', 'hours', 'minutes', 'seconds'], defaults=(0,)*6)
+Interval = namedtuple('Interval', ['years', 'months', 'days', 'hours', 'minutes', 'seconds'], defaults=(0, 0, 0, 0, 0, Decimal('0')))
 Range = namedtuple('Range', ['lower', 'upper', 'bounds'])
 
 
