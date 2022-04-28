@@ -1,3 +1,4 @@
 -e file:.#egg=streampq
 coverage
+mypy
 pytest
