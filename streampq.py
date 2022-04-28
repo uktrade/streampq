@@ -625,7 +625,7 @@ def get_array_decoder(value_decoder):
 
 
 Interval = namedtuple('Interval', ['years', 'months', 'days', 'hours', 'minutes', 'seconds'], defaults=(0,)*6)
-Range = namedtuple('Interval', ['lower', 'upper', 'bounds'])
+Range = namedtuple('Range', ['lower', 'upper', 'bounds'])
 
 
 class StreamPQError(Exception):
