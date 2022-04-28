@@ -32,6 +32,7 @@ def streampq_connect(
     _tuple = tuple
     bytes_decode = bytes.decode
     str_encode = str.encode
+    dict_get = dict.get
 
     pq = get_libpq()
     sel = DefaultSelector()
@@ -213,7 +214,7 @@ def streampq_connect(
 
     def encode(conn, value, func, array_types_set, encoders_dict):
         def _value_encode(value):
-            must_escape, encoder = encoders_dict.get(type(value), (True, str))
+            must_escape, encoder = dict_get(encoders_dict, type(value), (True, str))
             string_encoded = encoder(value)
             if not must_escape:
                 return string_encoded
@@ -286,7 +287,7 @@ def streampq_connect(
                             for i in range(0, num_columns)
                         )
                         values = _tuple(
-                            decoders_dict.get(
+                            dict_get(decoders_dict,
                                 None if PQgetisnull(result, 0, i) else \
                                 PQftype(result, i), identity)(bytes_decode(PQgetvalue(result, 0, i), 'utf-8'))
                             for i in range(0, num_columns)
