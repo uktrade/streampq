@@ -6,7 +6,7 @@ from functools import partial
 from json import loads as json_loads
 import re
 from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
-from ctypes import cdll, create_string_buffer, byref, cast, c_char_p, c_void_p, c_int, c_size_t
+from ctypes import cdll, create_string_buffer, cast, c_char_p, c_void_p, c_int, c_size_t
 from ctypes.util import find_library
 from itertools import groupby
 
@@ -19,6 +19,13 @@ def streampq_connect(
         get_decoders=lambda: get_default_decoders(),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
 ):
+    _create_string_buffer = create_string_buffer
+    _cast = cast
+    _c_char_p = c_char_p
+    _c_void_p = c_void_p
+    _c_int = c_int
+    _c_size_t = c_size_t
+
     pq = get_libpq()
     sel = DefaultSelector()
 
@@ -34,74 +41,74 @@ def streampq_connect(
     identity = lambda v: v
 
     PQconnectdbParams = pq.PQconnectdbParams
-    PQconnectdbParams.restype = c_void_p
+    PQconnectdbParams.restype = _c_void_p
     PQsocket = pq.PQsocket
-    PQsocket.argtypes = (c_void_p,)
+    PQsocket.argtypes = (_c_void_p,)
     PQsetnonblocking = pq.PQsetnonblocking
-    PQsetnonblocking.argtypes = (c_void_p, c_int)
+    PQsetnonblocking.argtypes = (_c_void_p, _c_int)
     PQflush = pq.PQflush
-    PQflush.argtypes = (c_void_p,)
+    PQflush.argtypes = (_c_void_p,)
     PQconsumeInput = pq.PQconsumeInput
-    PQconsumeInput.argtypes = (c_void_p,)
+    PQconsumeInput.argtypes = (_c_void_p,)
     PQisBusy = pq.PQisBusy
-    PQisBusy.argtypes = (c_void_p,)
+    PQisBusy.argtypes = (_c_void_p,)
     PQfinish = pq.PQfinish
-    PQfinish.argtypes = (c_void_p,)
+    PQfinish.argtypes = (_c_void_p,)
     PQstatus = pq.PQstatus
-    PQstatus.argtypes = (c_void_p,)
+    PQstatus.argtypes = (_c_void_p,)
 
     PQgetCancel = pq.PQgetCancel
-    PQgetCancel.argtypes = (c_void_p,)
-    PQgetCancel.restype = c_void_p
+    PQgetCancel.argtypes = (_c_void_p,)
+    PQgetCancel.restype = _c_void_p
     PQcancel = pq.PQcancel
-    PQcancel.argtypes = (c_void_p, c_char_p, c_int)
+    PQcancel.argtypes = (_c_void_p, _c_char_p, _c_int)
     PQfreeCancel = pq.PQfreeCancel
-    PQfreeCancel.argtypes = (c_void_p,)
+    PQfreeCancel.argtypes = (_c_void_p,)
 
     PQescapeLiteral = pq.PQescapeLiteral
-    PQescapeLiteral.argtypes = (c_void_p, c_char_p, c_size_t)
+    PQescapeLiteral.argtypes = (_c_void_p, _c_char_p, _c_size_t)
     PQescapeLiteral.restype = c_void_p
     PQescapeIdentifier = pq.PQescapeIdentifier
-    PQescapeIdentifier.argtypes = (c_void_p, c_char_p, c_size_t)
-    PQescapeIdentifier.restype = c_void_p
+    PQescapeIdentifier.argtypes = (_c_void_p, _c_char_p, _c_size_t)
+    PQescapeIdentifier.restype = _c_void_p
     PQfreemem = pq.PQfreemem
-    PQfreemem.argtypes = (c_void_p,)
+    PQfreemem.argtypes = (_c_void_p,)
 
     PQsendQuery = pq.PQsendQuery
-    PQsendQuery.argtypes = (c_void_p, c_char_p)
+    PQsendQuery.argtypes = (_c_void_p, _c_char_p)
     PQsetSingleRowMode = pq.PQsetSingleRowMode
-    PQsetSingleRowMode.argtypes = (c_void_p,)
+    PQsetSingleRowMode.argtypes = (_c_void_p,)
     PQgetResult = pq.PQgetResult
-    PQgetResult.argtypes = (c_void_p,)
-    PQgetResult.restype = c_void_p
+    PQgetResult.argtypes = (_c_void_p,)
+    PQgetResult.restype = _c_void_p
     PQresultStatus = pq.PQresultStatus
-    PQresultStatus.argtypes = (c_void_p,)
+    PQresultStatus.argtypes = (_c_void_p,)
     PQnfields= pq.PQnfields
-    PQnfields.argtypes = (c_void_p,)
+    PQnfields.argtypes = (_c_void_p,)
     PQfname = pq.PQfname
-    PQfname.argtypes = (c_void_p, c_int)
-    PQfname.restype = c_char_p
+    PQfname.argtypes = (_c_void_p, _c_int)
+    PQfname.restype = _c_char_p
     PQgetisnull = pq.PQgetisnull
-    PQgetisnull.argtypes = (c_void_p, c_int, c_int)
+    PQgetisnull.argtypes = (_c_void_p, _c_int, _c_int)
     PQgetvalue = pq.PQgetvalue
-    PQgetvalue.argtypes = (c_void_p, c_int, c_int)
-    PQgetvalue.restype = c_char_p
+    PQgetvalue.argtypes = (_c_void_p, _c_int, _c_int)
+    PQgetvalue.restype = _c_char_p
     PQftype = pq.PQftype
-    PQftype.argtypes = (c_void_p, c_int)
+    PQftype.argtypes = (_c_void_p, _c_int)
     PQclear = pq.PQclear
-    PQclear.argtypes = (c_void_p,)
+    PQclear.argtypes = (_c_void_p,)
 
     PQerrorMessage = pq.PQerrorMessage
-    PQerrorMessage.argtypes = (c_void_p,)
-    PQerrorMessage.restype = c_char_p
+    PQerrorMessage.argtypes = (_c_void_p,)
+    PQerrorMessage.restype = _c_char_p
 
     PGRES_COMMAND_OK = 1
     PGRES_TUPLES_OK = 2
     PGRES_SINGLE_TUPLE = 9
 
     def as_null_terminated_array(strings):
-        char_ps = tuple(c_char_p(string.encode('utf-8')) for string in strings) + (None,)
-        return (c_char_p * len(char_ps))(*char_ps)
+        char_ps = tuple(_c_char_p(string.encode('utf-8')) for string in strings) + (None,)
+        return (_c_char_p * len(char_ps))(*char_ps)
 
     params_tuple = tuple(params)
     keywords = as_null_terminated_array((key for key, value in params_tuple))
@@ -109,7 +116,7 @@ def streampq_connect(
 
     @contextmanager
     def get_conn():
-        conn = c_void_p(0)
+        conn = _c_void_p(0)
         try:
             conn = PQconnectdbParams(keywords, values, 0)
             if not conn:
@@ -140,12 +147,12 @@ def streampq_connect(
             yield set_needs_cancel
         finally:
             if query_running:
-                pg_cancel = c_void_p(0)
+                pg_cancel = _c_void_p(0)
                 try:
                     pg_cancel = PQgetCancel(conn)
                     if not pg_cancel:
                         raise CancelError(PQerrorMessage(conn).decode('utf-8'))
-                    buf = create_string_buffer(256)
+                    buf = _create_string_buffer(256)
                     ok = PQcancel(pg_cancel, buf, 256)
                     if not ok:
                         raise CancelError(buf.raw.rstrip(b'\x00').decode('utf-8'))
@@ -204,12 +211,12 @@ def streampq_connect(
             if not must_escape:
                 return string_encoded
             string_encoded_bytes = string_encoded.encode('utf-8')
-            escaped_p = c_void_p(0)
+            escaped_p = _c_void_p(0)
             try:
                 escaped_p = func(conn, string_encoded_bytes, len(string_encoded_bytes))
                 if not escaped_p:
                     raise StreamPQError(PQerrorMessage(conn).decode('utf-8'))
-                escaped_str = cast(escaped_p, c_char_p).value.decode('utf-8')
+                escaped_str = _cast(escaped_p, _c_char_p).value.decode('utf-8')
             finally:
                 PQfreemem(escaped_p)
 
@@ -247,7 +254,7 @@ def streampq_connect(
             # So we can use groupby to separate rows for different statements
             # in multi-statment queries
             group_key = object()
-            result = c_void_p(0)
+            result = _c_void_p(0)
 
             with get_blocker(socket, (EVENT_READ,)) as block_read:
                 while True:
@@ -281,7 +288,7 @@ def streampq_connect(
                         yield (group_key, columns), values
                     finally:
                         PQclear(result)
-                        result = c_void_p(0)
+                        result = _c_void_p(0)
 
             set_query_running(False)
 
