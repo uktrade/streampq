@@ -451,11 +451,12 @@ def get_interval_decoder():
     group = re.Match.group
     _int = int
     _Decimal = Decimal
+    _Interval = Interval
 
     def decode(raw):
         m = re_match(interval_regex, raw)
         sign = -1 if group(m, 'sign') == '-' else 1
-        return Interval(*(
+        return _Interval(*(
             int(group(m, 'years') or '0'),
             int(group(m, 'months') or '0'),
             int(group(m, 'days') or '0'),
