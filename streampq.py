@@ -269,6 +269,7 @@ def streampq_connect(
             result = _c_void_p(0)
             num_columns = None
             column_names = None
+            column_types = None
 
             with get_blocker(socket, (EVENT_READ,)) as block_read:
                 while True:
@@ -295,11 +296,15 @@ def streampq_connect(
                                 bytes_decode(PQfname(result, i), 'utf-8')
                                 for i in _range(0, num_columns)
                             )
+                            column_types = _tuple(
+                                PQftype(result, i)
+                                for i in _range(0, num_columns)
+                            )
 
                         values = _tuple(
-                            dict_get(decoders_dict,
-                                None if PQgetisnull(result, 0, i) else \
-                                PQftype(result, i), identity)(bytes_decode(PQgetvalue(result, 0, i), 'utf-8'))
+                            dict_get(decoders_dict, None if PQgetisnull(result, 0, i) else column_types[i], identity)(
+                                bytes_decode(PQgetvalue(result, 0, i), 'utf-8')
+                            )
                             for i in _range(0, num_columns)
                         )
 
