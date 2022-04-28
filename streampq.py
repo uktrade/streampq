@@ -26,12 +26,16 @@ def streampq_connect(
     _c_int = c_int
     _c_size_t = c_size_t
 
+    _dict = dict
+    _object = object
+    _tuple = tuple
+
     pq = get_libpq()
     sel = DefaultSelector()
 
     literal_encoders_array_types_set = set(get_literal_encoders_array_types())
-    literal_encoders_dict = dict(get_literal_encoders())
-    decoders_dict = dict(get_decoders())
+    literal_encoders_dict = _dict(get_literal_encoders())
+    decoders_dict = _dict(get_decoders())
 
     # Identifier encoding is not configurable - no known use case.
     # Since these are empty then we fall through to passing values through `str`
@@ -107,10 +111,10 @@ def streampq_connect(
     PGRES_SINGLE_TUPLE = 9
 
     def as_null_terminated_array(strings):
-        char_ps = tuple(_c_char_p(string.encode('utf-8')) for string in strings) + (None,)
+        char_ps = _tuple(_c_char_p(string.encode('utf-8')) for string in strings) + (None,)
         return (_c_char_p * len(char_ps))(*char_ps)
 
-    params_tuple = tuple(params)
+    params_tuple = _tuple(params)
     keywords = as_null_terminated_array((key for key, value in params_tuple))
     values = as_null_terminated_array((value for key, value in params_tuple))
 
@@ -236,9 +240,9 @@ def streampq_connect(
     def query(socket, conn, set_query_running, sql, literals=(), identifiers=()):
         set_query_running(True)
 
-        ok = PQsendQuery(conn, sql.format(**dict(
-            tuple((key, encode(conn, value, PQescapeLiteral, literal_encoders_array_types_set, literal_encoders_dict)) for key, value in literals) +
-            tuple((key, encode(conn, value, PQescapeIdentifier, identifier_encoders_array_types_set, identifier_encoders_dict)) for key, value in identifiers)
+        ok = PQsendQuery(conn, sql.format(**_dict(
+            _tuple((key, encode(conn, value, PQescapeLiteral, literal_encoders_array_types_set, literal_encoders_dict)) for key, value in literals) +
+            _tuple((key, encode(conn, value, PQescapeIdentifier, identifier_encoders_array_types_set, identifier_encoders_dict)) for key, value in identifiers)
         )).encode('utf-8'));
         if not ok:
             raise QueryError(PQerrorMessage(conn).decode('utf-8'))
@@ -253,7 +257,7 @@ def streampq_connect(
         def get_results():
             # So we can use groupby to separate rows for different statements
             # in multi-statment queries
-            group_key = object()
+            group_key = _object()
             result = _c_void_p(0)
 
             with get_blocker(socket, (EVENT_READ,)) as block_read:
@@ -267,18 +271,18 @@ def streampq_connect(
 
                         status = PQresultStatus(result)
                         if status in (PGRES_COMMAND_OK, PGRES_TUPLES_OK):
-                            group_key = object()
+                            group_key = _object()
                             continue
 
                         if status != PGRES_SINGLE_TUPLE:
                             raise QueryError(PQerrorMessage(conn).decode('utf-8'))
 
                         num_columns = PQnfields(result)
-                        columns = tuple(
+                        columns = _tuple(
                             PQfname(result, i).decode('utf-8')
                             for i in range(0, num_columns)
                         )
-                        values = tuple(
+                        values = _tuple(
                             decoders_dict.get(
                                 None if PQgetisnull(result, 0, i) else \
                                 PQftype(result, i), identity)(PQgetvalue(result, 0, i).decode('utf-8'))
@@ -341,7 +345,7 @@ def get_default_decoders():
 
     return \
         ((None, lambda _: None),) + \
-        sum(tuple((
+        sum(_tuple((
             (oid, value_decoder),
             (array_oid, get_array_decoder(value_decoder)),
         ) for oid, array_oid, value_decoder in (
