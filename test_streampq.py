@@ -213,6 +213,22 @@ def test_decoders(params, sql_value, python_value):
     assert result == python_value
 
 
+@pytest.mark.parametrize("sql_value,python_value", [
+    ("interval '1 year ago'", Interval(years=-1)),
+    ("interval '2 minutes ago'", Interval(minutes=-2)),
+])
+def test_interval_decoders_no_sign_seconds(params, sql_value, python_value):
+    # It's a bit easy to get Decimal('-0') which is as "right" as  Decimal('0'), but usually not expected
+    with streampq_connect(params) as query:
+        result = tuple(
+            tuple(rows)[0][0]
+            for cols, rows in query(f'SELECT {sql_value}')
+        )[0]
+
+    assert result == python_value
+    assert not result.seconds.is_signed()
+
+
 @pytest.mark.skipif(os.environ.get('POSTGRES_VERSION') == '13.6', reason='multiranges not available before PostgreSQL 14')
 @pytest.mark.parametrize("sql_value,python_value", [
     ("'{{[1,2],[5,6]}}'::int4multirange", (Range(1,3,'[)'),Range(5,7,'[)'))),

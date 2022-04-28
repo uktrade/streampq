@@ -438,8 +438,12 @@ def get_interval_decoder():
         m = re_match(interval_regex, raw)
         sign = -1 if group(m, 'sign') == '-' else 1
         return Interval(*(
-            func(group(m, name)) * sign if group(m ,name) else 0
-            for func, name, sign in ((_int, 'years', 1), (_int, 'months', 1), (_int, 'days', 1), (_int, 'hours', sign), (_int, 'minutes', sign), (_Decimal, 'seconds', sign))
+            int(group(m, 'years') or '0'),
+            int(group(m, 'months') or '0'),
+            int(group(m, 'days') or '0'),
+            int(group(m, 'hours') or '0') * sign,
+            int(group(m, 'minutes') or '0') * sign,
+            Decimal(group(m, 'seconds') or '0') * sign or Decimal('0'),
         ))
 
     return decode
