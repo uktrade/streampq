@@ -267,6 +267,8 @@ def streampq_connect(
             # in multi-statment queries
             group_key = _object()
             result = _c_void_p(0)
+            num_columns = None
+            columns = None
 
             with get_blocker(socket, (EVENT_READ,)) as block_read:
                 while True:
@@ -280,16 +282,20 @@ def streampq_connect(
                         status = PQresultStatus(result)
                         if status in (PGRES_COMMAND_OK, PGRES_TUPLES_OK):
                             group_key = _object()
+                            num_columns = None
+                            columns = None
                             continue
 
                         if status != PGRES_SINGLE_TUPLE:
                             raise QueryError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
-                        num_columns = PQnfields(result)
-                        columns = _tuple(
-                            bytes_decode(PQfname(result, i), 'utf-8')
-                            for i in _range(0, num_columns)
-                        )
+                        if columns == None:
+                            num_columns = PQnfields(result)
+                            columns = _tuple(
+                                bytes_decode(PQfname(result, i), 'utf-8')
+                                for i in _range(0, num_columns)
+                            )
+
                         values = _tuple(
                             dict_get(decoders_dict,
                                 None if PQgetisnull(result, 0, i) else \
