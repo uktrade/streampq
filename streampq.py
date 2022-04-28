@@ -10,14 +10,15 @@ from ctypes import cdll, create_string_buffer, cast, c_char_p, c_void_p, c_int, 
 from ctypes.util import find_library
 from itertools import groupby
 
+from typing import Tuple, Dict, Set, Any
 
 @contextmanager
 def streampq_connect(
-        params=(),
+        params: Tuple[Tuple[str, str], ...]=(),
         get_literal_encoders_array_types=lambda: get_default_literal_encoders_array_types(),
         get_literal_encoders=lambda: get_default_literal_encoders(),
         get_decoders=lambda: get_default_decoders(),
-        get_libpq=lambda: cdll.LoadLibrary(find_library('pq')),
+        get_libpq=lambda: cdll.LoadLibrary(find_library('pq') or 'libpq.so'),
 ):
     _create_string_buffer = create_string_buffer
     _cast = cast
@@ -47,8 +48,8 @@ def streampq_connect(
 
     # Identifier encoding is not configurable - no known use case.
     # Since these are empty then we fall through to passing values through `str`
-    identifier_encoders_array_types_set = set()
-    identifier_encoders_dict = dict()
+    identifier_encoders_array_types_set: Set = set()
+    identifier_encoders_dict: Dict = dict()
 
     identity = lambda v: v
 
