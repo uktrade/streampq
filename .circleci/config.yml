@@ -45,8 +45,7 @@ jobs:
           name: Check types
           command: |
             set -exu
-            mypy streampq.py
-            mypy test_streampq.py
+            mypy streampq.py test_streampq.py
       - run:
           name: Run tests
           no_output_timeout: 30m
