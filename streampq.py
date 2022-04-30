@@ -10,11 +10,11 @@ from ctypes import cdll, create_string_buffer, cast, c_char_p, c_void_p, c_int, 
 from ctypes.util import find_library
 from itertools import groupby
 
-from typing import Tuple, Dict, Set, Any
+from typing import Iterable, Tuple, Dict, Set, Any
 
 @contextmanager
 def streampq_connect(
-        params: Tuple[Tuple[str, str], ...]=(),
+        params: Iterable[Tuple[str, str]]=(),
         get_literal_encoders_array_types=lambda: get_default_literal_encoders_array_types(),
         get_literal_encoders=lambda: get_default_literal_encoders(),
         get_decoders=lambda: get_default_decoders(),
