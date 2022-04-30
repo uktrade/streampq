@@ -10,7 +10,7 @@ from ctypes import cdll, create_string_buffer, cast, c_char_p, c_void_p, c_int, 
 from ctypes.util import find_library
 from itertools import groupby
 
-from typing import Iterable, Tuple, Dict, Set, Any
+from typing import Callable, Iterable, Tuple, Dict, Set, Any
 
 @contextmanager
 def streampq_connect(
@@ -263,14 +263,14 @@ def streampq_connect(
         if not ok:
             raise QueryError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
-        def get_results():
+        def get_results() -> Iterable:
             # So we can use groupby to separate rows for different statements
             # in multi-statment queries
             group_key = _object()
             result = _c_void_p(0)
-            num_columns = None
-            column_names = None
-            column_decoders = None
+            num_columns = 0
+            column_names: Tuple[str, ...] = ()
+            column_decoders: Tuple[Callable[[str], Any], ...] = ()
             null_decoder = dict_get(decoders_dict, None, identity)
 
             with get_blocker(socket, (EVENT_READ,)) as block_read:
@@ -285,15 +285,15 @@ def streampq_connect(
                         status = PQresultStatus(result)
                         if status in (PGRES_COMMAND_OK, PGRES_TUPLES_OK):
                             group_key = _object()
-                            num_columns = None
-                            column_names = None
-                            column_decoders = None
+                            num_columns = 0
+                            column_names = ()
+                            column_decoders = ()
                             continue
 
                         if status != PGRES_SINGLE_TUPLE:
                             raise QueryError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
-                        if num_columns == None:
+                        if num_columns == 0:
                             num_columns = PQnfields(result)
                             column_names = _tuple(
                                 bytes_decode(PQfname(result, i), 'utf-8')
