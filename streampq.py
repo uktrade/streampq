@@ -10,7 +10,7 @@ from ctypes import cdll, create_string_buffer, cast, c_char_p, c_void_p, c_int, 
 from ctypes.util import find_library
 from itertools import groupby
 
-from typing import Protocol, Generator, Callable, Iterable, Tuple, Dict, Set, Any
+from typing import Protocol, Generator, Callable, Iterable, Tuple, List, Dict, Set, Any
 
 
 # A protocol is needed to use keyword arguments
@@ -347,6 +347,10 @@ def streampq_connect(
         yield get_query_func(socket, conn, set_query_running)
 
 
+Interval = namedtuple('Interval', ('years', 'months', 'days', 'hours', 'minutes', 'seconds'), defaults=(0, 0, 0, 0, 0, Decimal('0')))
+Range = namedtuple('Range', ('lower', 'upper', 'bounds'))
+
+
 def get_default_literal_encoders():
     return (
         # type, (must escape, encoder)
@@ -431,12 +435,12 @@ def get_default_decoders():
 # It's not perfect to map infinity to min/max for date/datetimes, but it's
 # probably fine in most cases
 
-def get_date_decoder():
+def get_date_decoder() -> Callable[[bytes], date]:
     date_min = date.min
     date_max = date.max
     fromisoformat = date.fromisoformat
 
-    def decode(raw):
+    def decode(raw) -> date:
         return \
             date_min if raw == '-infinity' else \
             date_max if raw == 'infinity' else \
@@ -444,12 +448,12 @@ def get_date_decoder():
     return decode
 
 
-def get_timestamp_decoder():
+def get_timestamp_decoder() -> Callable[[bytes], datetime]:
     datetime_min = datetime.min
     datetime_max = datetime.max
     strptime = datetime.strptime
 
-    def decode(raw):
+    def decode(raw) -> datetime:
         return \
             datetime_min if raw == '-infinity' else \
             datetime_max if raw == 'infinity' else \
@@ -457,13 +461,13 @@ def get_timestamp_decoder():
     return decode
 
 
-def get_timestamptz_decoder():
+def get_timestamptz_decoder() -> Callable[[str], datetime]:
     datetime_min = datetime.min.replace(tzinfo=timezone(timedelta())) 
     datetime_max = datetime.max.replace(tzinfo=timezone(timedelta()))
     strptime = datetime.strptime
     str_format = str.format
 
-    def decode(raw):
+    def decode(raw) -> datetime:
         # Infinities don't come with a timezone, so we just use 0-offset
         return \
             datetime_min if raw == '-infinity' else \
@@ -472,7 +476,7 @@ def get_timestamptz_decoder():
     return decode
 
 
-def get_interval_decoder():
+def get_interval_decoder() -> Callable[[str], Interval]:
     interval_regex = re.compile(r'((?P<years>-?\d+) years?)?( ?(?P<months>-?\d+) mons?)?( ?(?P<days>-?\d+) days?)?( ?(?P<sign>-)(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>.*))?')
     re_match = re.match
     group = re.Match.group
@@ -480,8 +484,9 @@ def get_interval_decoder():
     _Decimal = Decimal
     _Interval = Interval
 
-    def decode(raw):
+    def decode(raw) -> Interval:
         m = re_match(interval_regex, raw)
+        assert m is not None
         sign = -1 if group(m, 'sign') == '-' else 1
         return _Interval(*(
             _int(group(m, 'years') or '0'),
@@ -495,7 +500,7 @@ def get_interval_decoder():
     return decode
 
 
-def get_range_decoder(value_decoder):
+def get_range_decoder(value_decoder) -> Callable[[str], Range]:
     OUT = object()
     IN_UNQUOTED = object()
     IN_QUOTED = object()
@@ -504,11 +509,11 @@ def get_range_decoder(value_decoder):
     join = str.join
     _Range = Range
 
-    def decode(raw):
+    def decode(raw) -> Range:
         state = OUT
-        bounds = []
-        values = []
-        value = []
+        bounds: List = []
+        values: List = []
+        value: List = []
 
         for c in raw:
             if state is OUT:
@@ -546,7 +551,7 @@ def get_range_decoder(value_decoder):
     return decode
 
 
-def get_multirange_decoder(value_decoder):
+def get_multirange_decoder(value_decoder) -> Callable[[str], Tuple[Range, ...]]:
     OUT = object()
     IN_UNQUOTED = object()
     IN_QUOTED = object()
@@ -556,12 +561,12 @@ def get_multirange_decoder(value_decoder):
     _tuple = tuple
     _Range = Range
 
-    def decode(raw):
+    def decode(raw) -> Tuple[Range, ...]:
         state = OUT
-        ranges = []
-        bounds = []
-        values = []
-        value = []
+        ranges: List[Range] = []
+        bounds: List = []
+        values: List = []
+        value: List = []
 
         for c in raw:
             if state is OUT:
@@ -608,7 +613,7 @@ def get_multirange_decoder(value_decoder):
 
 
 
-def get_array_decoder(value_decoder):
+def get_array_decoder(value_decoder) -> Callable[[str], Tuple[Any, ...]]:
     OUT = object()
     IN_UNQUOTED = object()
     IN_QUOTED = object()
@@ -669,9 +674,6 @@ def get_array_decoder(value_decoder):
 
     return decode
 
-
-Interval = namedtuple('Interval', ('years', 'months', 'days', 'hours', 'minutes', 'seconds'), defaults=(0, 0, 0, 0, 0, Decimal('0')))
-Range = namedtuple('Range', ('lower', 'upper', 'bounds'))
 
 
 class StreamPQError(Exception):
