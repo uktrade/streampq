@@ -10,7 +10,7 @@ from ctypes import cdll, create_string_buffer, cast, c_char_p, c_void_p, c_int, 
 from ctypes.util import find_library
 from itertools import groupby
 
-from typing import Callable, Iterable, Tuple, Dict, Set, Any
+from typing import Generator, Callable, Iterable, Tuple, Dict, Set, Any
 
 @contextmanager
 def streampq_connect(
@@ -19,7 +19,7 @@ def streampq_connect(
         get_literal_encoders=lambda: get_default_literal_encoders(),
         get_decoders=lambda: get_default_decoders(),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq') or 'libpq.so'),
-):
+) -> Generator[Callable, None, None]:
     _create_string_buffer = create_string_buffer
     _cast = cast
     _c_char_p = c_char_p
