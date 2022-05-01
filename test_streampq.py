@@ -301,9 +301,10 @@ def test_missing_column(params) -> None:
     with streampq_connect(params) as query:
         results = iter(query(sql))
         _, rows = next(results)
-        next(rows)
+        rows_it = iter(rows)
+        next(rows_it)
         with pytest.raises(QueryError, match='column "a" does not exist'):
-            next(rows)
+            next(rows_it)
 
 
 def test_large_query(params) -> None:
@@ -502,8 +503,9 @@ def test_incomplete_iteration_same_query(params) -> None:
     count = 0
     with streampq_connect(params) as query:
         all_results = query(sql)
-        next(all_results)
-        cols, rows = next(all_results)
+        all_resuylts_it = iter(all_results)
+        next(all_resuylts_it)
+        cols, rows = next(all_resuylts_it)
         second_query_results = tuple(rows)
 
     assert second_query_results == (('foo',), ('bar',))
@@ -523,8 +525,10 @@ def test_incomplete_iteration_different_query(params) -> None:
     count = 0
     with streampq_connect(params) as query:
         all_results = query(sql)
-        cols, rows = next(all_results)
-        next(rows)
+        all_results_it = iter(all_results)
+        cols, rows = next(all_results_it)
+        rows_it = iter(rows)
+        next(rows_it)
 
         with pytest.raises(QueryError, match='another command is already in progress'):
             query(sql)
