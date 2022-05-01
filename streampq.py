@@ -14,9 +14,9 @@ from typing import Protocol, Generator, Callable, Iterable, Tuple, Dict, Set, An
 
 
 # A protocol is needed to use keyword arguments
+Results = Iterable[Tuple[Tuple[str,...], Iterable[Tuple[Any, ...]]]]
 class Query(Protocol):
-    def __call__(self, sql: str, literals: Iterable[Tuple[str, Any]]=(), identifiers: Iterable[Tuple[str, Any]]=()) -> \
-        Iterable[Tuple[Tuple[str,...], Iterable[Tuple[Any, ...]]]]: ...
+    def __call__(self, sql: str, literals: Iterable[Tuple[str, Any]]=(), identifiers: Iterable[Tuple[str, Any]]=()) -> Results: ...
 
 
 @contextmanager
@@ -253,7 +253,7 @@ def streampq_connect(
             _value_encode(value)
 
 
-    def query(socket, conn, set_query_running, sql, literals, identifiers):
+    def query(socket, conn, set_query_running, sql, literals, identifiers) -> Results:
         set_query_running(True)
 
         ok = PQsendQuery(conn, str_encode(sql.format(**_dict(
@@ -335,7 +335,7 @@ def streampq_connect(
 
     # Avoid partial to make type checking more sensitive
     def get_query_func(socket, conn, set_query_running) -> Query:
-        def _query(sql, literals=(), identifiers=()):
+        def _query(sql, literals=(), identifiers=()) -> Results:
             return query(socket, conn, set_query_running, sql, literals=literals, identifiers=identifiers)
 
         return _query
