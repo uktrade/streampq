@@ -7,7 +7,7 @@ import uuid
 import os
 import sys
 from types import FrameType
-from typing import Optional, Iterable, Tuple, Any
+from typing import Type, TypeVar, Optional, Iterable, Tuple, Any
 
 import pytest
 
@@ -325,7 +325,9 @@ def test_large_query(params: Iterable[Tuple[str, str]]) -> None:
     assert string == returned_string
 
 
-def run_query(params: Iterable[Tuple[str, str]], sql: str, about_to_run_query: Any, exception_bubbled: Any, exception_type: Any) -> None:
+BaseExceptionType = TypeVar('BaseExceptionType', bound=BaseException)
+
+def run_query(params: Iterable[Tuple[str, str]], sql: str, about_to_run_query: Any, exception_bubbled: Any, exception_type: Type[BaseExceptionType]) -> None:
     def sigterm_handler(_: int, __: Optional[FrameType]) -> None:
         sys.exit(0)
     signal.signal(signal.SIGTERM, sigterm_handler)
