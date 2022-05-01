@@ -20,7 +20,7 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License',
         'Topic :: Database',
     ],
-    python_requires='>=3.7.0',
+    python_requires='>=3.8.0',
     py_modules=[
         'streampq',
     ],

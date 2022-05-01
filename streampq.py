@@ -1,8 +1,8 @@
 from collections import namedtuple
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from functools import partial
 from json import loads as json_loads
 import re
 from selectors import DefaultSelector, EVENT_READ, EVENT_WRITE
@@ -10,7 +10,13 @@ from ctypes import cdll, create_string_buffer, cast, c_char_p, c_void_p, c_int, 
 from ctypes.util import find_library
 from itertools import groupby
 
-from typing import Generator, Callable, Iterable, Tuple, Dict, Set, Any
+from typing import Protocol, Generator, Callable, Iterable, Tuple, Dict, Set, Any
+
+
+# A protocol is needed to use keyword arguments
+class Query(Protocol):
+    def __call__(self, sql: str, literals: Iterable[Tuple[str, Any]]=(), identifiers: Iterable[Tuple[str, Any]]=()): ...
+
 
 @contextmanager
 def streampq_connect(
@@ -19,7 +25,7 @@ def streampq_connect(
         get_literal_encoders=lambda: get_default_literal_encoders(),
         get_decoders=lambda: get_default_decoders(),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq') or 'libpq.so'),
-) -> Generator[Callable, None, None]:
+) -> Generator[Query, None, None]:
     _create_string_buffer = create_string_buffer
     _cast = cast
     _c_char_p = c_char_p
@@ -246,7 +252,7 @@ def streampq_connect(
             _value_encode(value)
 
 
-    def query(socket, conn, set_query_running, sql, literals=(), identifiers=()):
+    def query(socket, conn, set_query_running, sql, literals, identifiers):
         set_query_running(True)
 
         ok = PQsendQuery(conn, str_encode(sql.format(**_dict(
@@ -326,11 +332,18 @@ def streampq_connect(
 
         return with_columns
 
+    # Avoid partial to make type checking more sensitive
+    def get_query_func(socket, conn, set_query_running):
+        def _query(sql, literals=(), identifiers=()):
+            return query(socket, conn, set_query_running, sql, literals=literals, identifiers=identifiers)
+
+        return _query
+
     with \
             get_conn() as (socket, conn), \
             cancel_query(socket, conn) as set_query_running:
 
-        yield partial(query, socket, conn, set_query_running)
+        yield get_query_func(socket, conn, set_query_running)
 
 
 def get_default_literal_encoders():
