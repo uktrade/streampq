@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from multiprocessing import Process, Event
+from multiprocessing.synchronize import Event as EventClass
 from time import sleep
 import signal
 import uuid
@@ -327,7 +328,7 @@ def test_large_query(params: Iterable[Tuple[str, str]]) -> None:
 
 BaseExceptionType = TypeVar('BaseExceptionType', bound=BaseException)
 
-def run_query(params: Iterable[Tuple[str, str]], sql: str, about_to_run_query: Any, exception_bubbled: Any, exception_type: Type[BaseExceptionType]) -> None:
+def run_query(params: Iterable[Tuple[str, str]], sql: str, about_to_run_query: EventClass, exception_bubbled: EventClass, exception_type: Type[BaseExceptionType]) -> None:
     def sigterm_handler(_: int, __: Optional[FrameType]) -> None:
         sys.exit(0)
     signal.signal(signal.SIGTERM, sigterm_handler)
