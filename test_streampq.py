@@ -6,6 +6,8 @@ import signal
 import uuid
 import os
 import sys
+from types import FrameType
+from typing import Optional, Iterable, Tuple, Any
 
 import pytest
 
@@ -13,7 +15,7 @@ from streampq import streampq_connect, Interval, Range, ConnectionError, QueryEr
 
 
 @pytest.fixture
-def params():
+def params() -> Iterable[Iterable[Tuple[str, str]]]:
     yield (
         ('host', 'localhost'),
         ('port', '5432'),
@@ -23,18 +25,18 @@ def params():
     )
 
 
-def test_connection_error(params) -> None:
+def test_connection_error(params: Iterable[Tuple[str, str]]) -> None:
     with pytest.raises(ConnectionError, match='could not translate host name "does-not-exist" to address'):
         streampq_connect((('host', 'does-not-exist'),)).__enter__()
 
 
-def test_multiple_queries_with_params_from_iterable(params) -> None:
+def test_multiple_queries_with_params_from_iterable(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
         SELECT 1 as "first";
         SELECT 2,'3';
     '''
 
-    def params_it():
+    def params_it() -> Iterable[Tuple[str, str]]:
         yield from dict(params).items()
 
     with streampq_connect(params_it()) as query:
@@ -49,7 +51,7 @@ def test_multiple_queries_with_params_from_iterable(params) -> None:
     )
 
 
-def test_multiple_queries(params) -> None:
+def test_multiple_queries(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
         SELECT 1 as "first";
         SELECT 2,'3';
@@ -66,7 +68,7 @@ def test_multiple_queries(params) -> None:
     )
 
 
-def test_literal_escaping(params) -> None:
+def test_literal_escaping(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
         SELECT {first} as "first", {second} as "second";
     '''
@@ -85,7 +87,7 @@ def test_literal_escaping(params) -> None:
     )
 
 
-def test_identifier_escaping(params) -> None:
+def test_identifier_escaping(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
         SELECT 'first' as {first}, 'second' as {second}, 'third' as {third};
     '''
@@ -201,7 +203,7 @@ def test_identifier_escaping(params) -> None:
     ("'[1,2]'::int8range", Range(1,3,'[)')),
     ("ARRAY['[1,2]']::_int8range", (Range(1,3,'[)'),)),
 ])
-def test_decoders(params, sql_value, python_value) -> None:
+def test_decoders(params: Iterable[Tuple[str, str]], sql_value: str, python_value: Any) -> None:
     with streampq_connect(params) as query:
         list(query("SET TIMEZONE TO -10"))
 
@@ -217,7 +219,7 @@ def test_decoders(params, sql_value, python_value) -> None:
     ("interval '1 year ago'", Interval(years=-1)),
     ("interval '2 minutes ago'", Interval(minutes=-2)),
 ])
-def test_interval_decoders_no_sign_seconds(params, sql_value, python_value) -> None:
+def test_interval_decoders_no_sign_seconds(params: Iterable[Tuple[str, str]], sql_value: str, python_value: Any) -> None:
     # It's a bit easy to get Decimal('-0') which is as "right" as  Decimal('0'), but usually not expected
     with streampq_connect(params) as query:
         result = tuple(
@@ -244,7 +246,7 @@ def test_interval_decoders_no_sign_seconds(params, sql_value, python_value) -> N
     ("'{{[1,2],[1,2]}}'::int8multirange", (Range(1,3,'[)'),)),
     ("ARRAY['{{[1,2]}}']::_int8multirange", ((Range(1,3,'[)'),),)),
 ])
-def test_multirange_decoders(params, sql_value, python_value) -> None:
+def test_multirange_decoders(params: Iterable[Tuple[str, str]], sql_value: str, python_value: Any) -> None:
     with streampq_connect(params) as query:
         list(query("SET TIMEZONE TO -10"))
 
@@ -271,7 +273,7 @@ def test_multirange_decoders(params, sql_value, python_value) -> None:
     ((('a"','\\b'),('a','b')), (('a"','\\b'),('a','b'))),
     ((True, False), (True,False)),
 ])
-def test_encoders(params, python_value, sql_value_as_python) -> None:
+def test_encoders(params: Iterable[Tuple[str, str]], python_value: Any, sql_value_as_python: Any) -> None:
     with streampq_connect(params) as query:
         result = tuple(
             tuple(rows)[0][0]
@@ -283,7 +285,7 @@ def test_encoders(params, python_value, sql_value_as_python) -> None:
     assert result == sql_value_as_python
 
 
-def test_syntax_error(params) -> None:
+def test_syntax_error(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
         SELECT 1;
         SELECTa;
@@ -293,7 +295,7 @@ def test_syntax_error(params) -> None:
             next(iter(query(sql)))
 
 
-def test_missing_column(params) -> None:
+def test_missing_column(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
         SELECT 1;
         SELECT a;
@@ -307,7 +309,7 @@ def test_missing_column(params) -> None:
             next(rows_it)
 
 
-def test_large_query(params) -> None:
+def test_large_query(params: Iterable[Tuple[str, str]]) -> None:
     string = '-' * 100_000_000
     sql = f'''
         SELECT '{string}'
@@ -323,8 +325,8 @@ def test_large_query(params) -> None:
     assert string == returned_string
 
 
-def run_query(params, sql, about_to_run_query, exception_bubbled, exception_type) -> None:
-    def sigterm_handler(_, __):
+def run_query(params: Iterable[Tuple[str, str]], sql: str, about_to_run_query: Any, exception_bubbled: Any, exception_type: Any) -> None:
+    def sigterm_handler(_: int, __: Optional[FrameType]) -> None:
         sys.exit(0)
     signal.signal(signal.SIGTERM, sigterm_handler)
 
@@ -340,7 +342,7 @@ def run_query(params, sql, about_to_run_query, exception_bubbled, exception_type
     (signal.SIGINT, KeyboardInterrupt),
     (signal.SIGTERM, SystemExit),
 ])
-def test_keyboard_interrupt(params, signal_type, exception_type) -> None:
+def test_keyboard_interrupt(params: Iterable[Tuple[str, str]], signal_type: int, exception_type: Any) -> None:
     about_to_run_query = Event()
     exception_bubbled = Event()
 
@@ -378,7 +380,7 @@ def test_keyboard_interrupt(params, signal_type, exception_type) -> None:
     assert count == 0
 
 
-def test_temporary_table(params) -> None:
+def test_temporary_table(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
         CREATE TEMPORARY TABLE my_temp_table AS SELECT a, b
         FROM (
@@ -401,7 +403,7 @@ def test_temporary_table(params) -> None:
     )
 
 
-def test_empty_queries_among_others(params) -> None:
+def test_empty_queries_among_others(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
         ;;
         SELECT 1 as "col"
@@ -421,7 +423,7 @@ def test_empty_queries_among_others(params) -> None:
     )
 
 
-def test_series(params) -> None:
+def test_series(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
         SELECT * FROM generate_series(1,10000000);
     '''
@@ -436,7 +438,7 @@ def test_series(params) -> None:
     assert count == 10000000
 
 
-def test_notice(params) -> None:
+def test_notice(params: Iterable[Tuple[str, str]]) -> None:
     notice = f'NOTICE--' * 10000
     sql = f'''
         CREATE OR REPLACE FUNCTION r(i integer) RETURNS integer AS $$
@@ -461,7 +463,7 @@ def test_notice(params) -> None:
     assert count == 100001
 
 
-def test_sending_notify_from_another_connection(params) -> None:
+def test_sending_notify_from_another_connection(params: Iterable[Tuple[str, str]]) -> None:
     string = '-' * 100_000_000
     sql = f'''
         SELECT '{string}'
@@ -482,7 +484,7 @@ def test_sending_notify_from_another_connection(params) -> None:
     assert string == returned_string
 
 
-def test_incomplete_iteration_same_query(params) -> None:
+def test_incomplete_iteration_same_query(params: Iterable[Tuple[str, str]]) -> None:
     # Not completely sure if this is desired or not - if calling
     # code doesn't complete iteration of results of an individual
     # statment, then the groupby under the hood seems to continue
@@ -511,7 +513,7 @@ def test_incomplete_iteration_same_query(params) -> None:
     assert second_query_results == (('foo',), ('bar',))
 
 
-def test_incomplete_iteration_different_query(params) -> None:
+def test_incomplete_iteration_different_query(params: Iterable[Tuple[str, str]]) -> None:
     # Not completely sure if this is desired or not - should the
     # existing command be cancelled and the new one allowed to run?
 
