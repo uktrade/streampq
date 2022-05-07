@@ -2,3 +2,5 @@
 coverage
 mypy
 pytest
+pandas
+pandas-stubs

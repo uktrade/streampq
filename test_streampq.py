@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
+import itertools
 from multiprocessing import Process, Event
 from multiprocessing.synchronize import Event as EventClass
 from time import sleep
@@ -10,6 +11,7 @@ import sys
 from types import FrameType
 from typing import Type, TypeVar, Optional, Iterable, Tuple, Any
 
+import pandas as pd
 import pytest
 
 from streampq import streampq_connect, Interval, Range, ConnectionError, QueryError
@@ -439,6 +441,33 @@ def test_series(params: Iterable[Tuple[str, str]]) -> None:
                 count += 1
 
     assert count == 10000000
+
+
+def test_series_pandas(params: Iterable[Tuple[str, str]]) -> None:
+    sql = '''
+        SELECT * FROM generate_series(1,1005);
+    '''
+
+    def query_chunked_dfs(query, sql, chunk_size):
+
+        def _chunked_df(columns, rows):
+            it = iter(rows)
+            while True:
+                df = pd.DataFrame.from_records(itertools.islice(it, chunk_size), columns=columns)
+                if len(df) == 0:
+                    break
+                yield df
+
+        for cols, rows in query(sql):
+            yield _chunked_df(cols, rows)
+
+    lengths = []
+    with streampq_connect(params) as query:
+        for chunked_dfs in query_chunked_dfs(query, sql, chunk_size=100):
+            for chunk_df in chunked_dfs:
+                lengths.append(len(chunk_df))
+
+    assert lengths == [100] * 10 + [5]
 
 
 def test_notice(params: Iterable[Tuple[str, str]]) -> None:

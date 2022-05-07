@@ -58,6 +58,46 @@ with streampq_connect(connection_params) as query:
             print(row)  # Tuple of row  values
 ```
 
+### Chunked Pandas dataframes of SQL query results
+
+You can create chunked Pandas dataframes of SQL query results, similar to the output of using the `chunksize` parameter of the Pandas `read_csv` function. This uses a helper function to do the chunking.
+
+```python
+import itertools
+import pandas as pd
+from streampq import streampq_connect
+
+connection_params = (
+    ('host', 'localhost'),
+    ('port', '5432'),
+    ('dbname', 'postgres'),
+    ('user', 'postgres'),
+    ('password', 'password'),
+)
+
+sql = '''
+    SELECT * FROM my_table;
+    SELECT * FROM my_other_table;
+'''
+
+def query_chunked_dfs(query, sql, chunk_size):
+
+    def _chunked_df(columns, rows):
+        it = iter(rows)
+        while True:
+            df = pd.DataFrame.from_records(itertools.islice(it, chunk_size), columns=columns)
+            if len(df) == 0:
+                break
+            yield df
+
+    for columns, rows in query(sql):
+        yield _chunked_df(columns, rows)
+
+with streampq_connect(connection_params) as query:
+    for chunked_dfs in query_chunked_dfs(query, sql, chunk_size=10000):
+        for df in chunked_dfs:
+            print(df)
+```
 
 ### PostgreSQL types to Python type decoding
 
