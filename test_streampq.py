@@ -14,7 +14,7 @@ from typing import Type, TypeVar, Optional, Iterable, Tuple, Any
 import pandas as pd
 import pytest
 
-from streampq import streampq_connect, Interval, Range, ConnectionError, QueryError
+from streampq import streampq_connect, Interval, Range, ConnectionError, QueryError, Query
 
 
 @pytest.fixture
@@ -448,9 +448,9 @@ def test_series_pandas(params: Iterable[Tuple[str, str]]) -> None:
         SELECT * FROM generate_series(1,1005);
     '''
 
-    def query_chunked_dfs(query, sql, chunk_size):
+    def query_chunked_dfs(query: Query, sql: str, chunk_size: int) -> Iterable[Iterable[pd.DataFrame]]:
 
-        def _chunked_df(columns, rows):
+        def _chunked_df(columns: Tuple[str,...], rows: Iterable[Tuple[Any,...]]) -> Iterable[pd.DataFrame]:
             it = iter(rows)
             while True:
                 df = pd.DataFrame.from_records(itertools.islice(it, chunk_size), columns=columns)
