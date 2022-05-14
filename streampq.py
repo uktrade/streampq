@@ -1,5 +1,4 @@
 from collections import namedtuple
-from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
@@ -10,7 +9,7 @@ from ctypes import cdll, create_string_buffer, cast, c_char_p, c_void_p, c_int, 
 from ctypes.util import find_library
 from itertools import groupby
 
-from typing import Protocol, Generator, Callable, Iterable, Tuple, List, Dict, Set, Any
+from typing import Protocol, Callable, Iterator, Iterable, Tuple, List, Dict, Set, Any
 
 
 # A protocol is needed to use keyword arguments
@@ -26,7 +25,7 @@ def streampq_connect(
         get_literal_encoders=lambda: get_default_literal_encoders(),
         get_decoders=lambda: get_default_decoders(),
         get_libpq=lambda: cdll.LoadLibrary(find_library('pq') or 'libpq.so'),
-) -> Generator[Query, None, None]:
+) -> Iterator[Query]:
     _create_string_buffer = create_string_buffer
     _cast = cast
     _c_char_p = c_char_p
