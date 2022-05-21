@@ -261,6 +261,46 @@ def test_multirange_decoders(params: Iterable[Tuple[str, str]], sql_value: str, 
     assert result == python_value
 
 
+def test_bootstreap_rowtypes(params: Iterable[Tuple[str, str]]) -> None:
+    # We only check that an exception isn't raised and that most likely
+    # We don't decode the rowtype data itself since not sure on use case,
+    # and so don't assert on more since not sure there is a use case
+    with streampq_connect(params) as query:
+        result = tuple(
+            tuple(rows)
+            for cols, rows in query("""
+                SELECT pg_type FROM pg_type;
+                SELECT pg_attribute FROM pg_attribute;
+                SELECT pg_class FROM pg_class;
+                SELECT pg_proc FROM pg_proc;
+            """)
+        )
+    for i in range(0, 4):
+        assert isinstance(result[i][0], tuple)
+        assert isinstance(result[i][0][0], str)
+
+
+@pytest.mark.skipif(float(os.environ.get('POSTGRES_VERSION', '0')) < 14.0, reason='rowtype arrays not available before PostgreSQL 14')
+def test_bootstreap_rowtypes_arrays(params: Iterable[Tuple[str, str]]) -> None:
+    # We only check that an exception isn't raised and that most likely
+    # the array types are decoded properly into tuples. We don't decode
+    # the rowtype data itself, and so don't assert on more since not sure
+    # there is a use case
+    with streampq_connect(params) as query:
+        result = tuple(
+            tuple(rows)
+            for cols, rows in query("""
+                SELECT ARRAY[pg_type] FROM pg_type;
+                SELECT ARRAY[pg_attribute] FROM pg_attribute;
+                SELECT ARRAY[pg_class] FROM pg_class;
+                SELECT ARRAY[pg_proc] FROM pg_proc;
+            """)
+        )
+    for i in range(0, 4):
+        assert isinstance(result[i][0][0], tuple)
+        assert isinstance(result[i][0][0][0], str)
+
+
 @pytest.mark.parametrize("python_value,sql_value_as_python", [
     (None, None),
     (True, True),

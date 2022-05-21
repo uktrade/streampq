@@ -401,6 +401,10 @@ def get_default_decoders():
             (28, 1011, int),                                                            # xid
             (29, 1012, int),                                                            # cid
             (30, 1013, lambda v: _tuple(int(i) for i in split(v))),                     # oidvector
+            (71, 210, identity),                                                        # pg_type
+            (75, 270, identity),                                                        # pg_attribute
+            (81, 272, identity),                                                        # pg_proc
+            (83, 273, identity),                                                        # pg_class
             (114, 199, json_loads),                                                     # json
             (142, 143, identity),                                                       # xml
             (650, 651, identity),                                                       # cidr
