@@ -55,7 +55,7 @@ with streampq_connect(connection_params) as query:
     for (columns, rows) in query(sql):
         print(columns)  # Tuple of (column name, type, type modifier) triples
         for row in rows:
-            print(row)  # Tuple of row  values
+            print(row)  # Tuple of row values
 ```
 
 ### Chunked Pandas dataframes of SQL query results
