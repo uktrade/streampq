@@ -112,7 +112,7 @@ There are [194 built-in PostgreSQL data types (including array types)](https://g
 | integer (e.g. int4)                                    | int                                                                                                           |
 | inexact real number (e.g. float4)                      | float                                                                                                         |
 | exact real number (e.g. numeric)                       | Decimal                                                                                                       |
-| date                                                   | date<br>( + and - infinity are mapped to date.max and date.min respectively)                                  |
+| date                                                   | date<br>(+ and - infinity are mapped to date.max and date.min respectively)                                   |
 | timestamp                                              | datetime<br>(without timezone, + and - infinity are mapped to datetime.max and datetime.min respectively)     |
 | timestamptz                                            | datetime<br>(with offset timezone, + and - infinity are mapped to datetime.max and datetime.min respectively) |
 | json and jsonb                                         | output of json.loads                                                                                          |
