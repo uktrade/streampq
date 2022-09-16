@@ -104,22 +104,22 @@ with streampq_connect(connection_params) as query:
 
 There are [194 built-in PostgreSQL data types (including array types)](https://github.com/postgres/postgres/blob/master/src/include/catalog/pg_type.dat), and streampq converts them to Python types. In summary:
 
-| PostgreSQL types                                       | Python type                                                                                                |
-|:-------------------------------------------------------| :----------------------------------------------------------------------------------------------------------|
-| null                                                   | None                                                                                                       |
-| text (e.g. varchar), xml, network addresses, and money | str                                                                                                        |
-| byte (e.g. bytea)                                      | bytes                                                                                                      |
-| integer (e.g. int4)                                    | int                                                                                                        |
-| inexact real number (e.g. float4)                      | float                                                                                                      |
-| exact real number (e.g. numeric)                       | Decimal                                                                                                    |
-| date                                                   | date ( + and - infinity are mapped to date.max and date.min respectively)                                  |
-| timestamp                                              | datetime (without timezone, + and - infinity are mapped to datetime.max and datetime.min respectively)     |
-| timestamptz                                            | datetime (with offset timezone, + and - infinity are mapped to datetime.max and datetime.min respectively) |
-| json and jsonb                                         | output of json.loads                                                                                       |
-| interval                                               | [streampq.Interval](#streampqinterval)                                                                     |
-| range (e.g. daterange)                                 | [streampq.Range](#streampqrange)                                                                           |
-| multirange (e.g. datemultirange)                       | tuples of [streampq.Range](#streampqrange)                                                                 |
-| arrays and vectors                                     | tuple (of any of the above types, or of nested tuples)                                                     |
+| PostgreSQL types                                       | Python type                                                                                                   |
+|:-------------------------------------------------------| :-------------------------------------------------------------------------------------------------------------|
+| null                                                   | None                                                                                                          |
+| text (e.g. varchar), xml, network addresses, and money | str                                                                                                           |
+| byte (e.g. bytea)                                      | bytes                                                                                                         |
+| integer (e.g. int4)                                    | int                                                                                                           |
+| inexact real number (e.g. float4)                      | float                                                                                                         |
+| exact real number (e.g. numeric)                       | Decimal                                                                                                       |
+| date                                                   | date<br>( + and - infinity are mapped to date.max and date.min respectively)                                  |
+| timestamp                                              | datetime<br>(without timezone, + and - infinity are mapped to datetime.max and datetime.min respectively)     |
+| timestamptz                                            | datetime<br>(with offset timezone, + and - infinity are mapped to datetime.max and datetime.min respectively) |
+| json and jsonb                                         | output of json.loads                                                                                          |
+| interval                                               | [streampq.Interval](#streampqinterval)                                                                        |
+| range (e.g. daterange)                                 | [streampq.Range](#streampqrange)                                                                              |
+| multirange (e.g. datemultirange)                       | tuples of [streampq.Range](#streampqrange)                                                                    |
+| arrays and vectors                                     | tuple (of any of the above types, or of nested tuples)                                                        |
 
 To customise these, override the default value of the `get_decoders` parameter of the `streampq_connect` function in [streampq.py](./streampq.py).
 
