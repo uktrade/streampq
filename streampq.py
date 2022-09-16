@@ -114,6 +114,8 @@ def streampq_connect(
     PQgetvalue.restype = _c_char_p
     PQftype = pq.PQftype
     PQftype.argtypes = (_c_void_p, _c_int)
+    PQfmod = pq.PQfmod
+    PQfmod.argtypes = (_c_void_p, _c_int)
     PQclear = pq.PQclear
     PQclear.argtypes = (_c_void_p,)
 
@@ -275,7 +277,7 @@ def streampq_connect(
             group_key = _object()
             result = _c_void_p(0)
             num_columns = 0
-            column_names: Tuple[str, ...] = ()
+            columns: Tuple[Tuple[str, int, int], ...] = ()
             column_decoders: Tuple[Callable[[str], Any], ...] = ()
             null_decoder = dict_get(decoders_dict, None, identity)
 
@@ -292,7 +294,7 @@ def streampq_connect(
                         if status in (PGRES_COMMAND_OK, PGRES_TUPLES_OK):
                             group_key = _object()
                             num_columns = 0
-                            column_names = ()
+                            columns = ()
                             column_decoders = ()
                             continue
 
@@ -301,12 +303,16 @@ def streampq_connect(
 
                         if num_columns == 0:
                             num_columns = PQnfields(result)
-                            column_names = _tuple(
-                                bytes_decode(PQfname(result, i), 'utf-8')
+                            columns = _tuple(
+                                (
+                                    bytes_decode(PQfname(result, i), 'utf-8'),
+                                    PQftype(result, i),
+                                    PQfmod(result, i),
+                                )
                                 for i in _range(0, num_columns)
                             )
                             column_decoders = _tuple(
-                                dict_get(decoders_dict, PQftype(result, i), identity)
+                                dict_get(decoders_dict, columns[i][1], identity)
                                 for i in _range(0, num_columns)
                             )
 
@@ -315,7 +321,7 @@ def streampq_connect(
                             for i in _range(0, num_columns)
                         )
 
-                        yield (group_key, column_names), values
+                        yield (group_key, columns), values
                     finally:
                         PQclear(result)
                         result = _c_void_p(0)

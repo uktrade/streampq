@@ -49,8 +49,8 @@ def test_multiple_queries_with_params_from_iterable(params: Iterable[Tuple[str, 
         )
 
     assert results == (
-        (('first',), ((1,),)),
-        (('?column?','?column?'), ((2,'3'),)),
+        ((('first', 23, -1),), ((1,),)),
+        ((('?column?', 23, -1), ('?column?', 25, -1)), ((2,'3'),)),
     )
 
 
@@ -66,8 +66,8 @@ def test_multiple_queries(params: Iterable[Tuple[str, str]]) -> None:
         )
 
     assert results == (
-        (('first',), ((1,),)),
-        (('?column?','?column?'), ((2,'3'),)),
+        ((('first', 23, -1),), ((1,),)),
+        ((('?column?', 23, -1), ('?column?', 25, -1)), ((2,'3'),)),
     )
 
 
@@ -85,7 +85,7 @@ def test_literal_escaping(params: Iterable[Tuple[str, str]]) -> None:
         )
 
     assert results == (
-        (('first', 'second'),
+        ((('first', 25, -1), ('second', 25, -1)),
         (('🍰', 'an\'"other'),)),
     )
 
@@ -105,7 +105,7 @@ def test_identifier_escaping(params: Iterable[Tuple[str, str]]) -> None:
         )
 
     assert results == ((
-        ('🍰', 'an\'"other', '(1, 2)'),
+        (('🍰', 25, -1), ('an\'"other', 25, -1), ('(1, 2)', 25, -1)),
         (('first', 'second', 'third'),)
     ),)
 
@@ -442,7 +442,7 @@ def test_temporary_table(params: Iterable[Tuple[str, str]]) -> None:
 
     assert results == (
         (
-            ('a', 'b'),
+            (('a', 25, -1), ('b', 23, -1)),
             (('foo', 1), ('bar', 2), ('baz', 3)),
         ),
     )
@@ -463,8 +463,24 @@ def test_empty_queries_among_others(params: Iterable[Tuple[str, str]]) -> None:
         )
 
     assert results == (
-        (('col',), ((1,),)),
-        (('col',), ((2,),)),
+        ((('col', 23, -1),), ((1,),)),
+        ((('col', 23, -1),), ((2,),)),
+    )
+
+
+def test_with_type_modifier(params: Iterable[Tuple[str, str]]) -> None:
+    sql = '''
+        SELECT 'a'::varchar(8) as "col"
+    '''
+
+    with streampq_connect(params) as query:
+        results = tuple(
+            (cols, tuple(rows))
+            for cols, rows in query(sql)
+        )
+
+    assert results == (
+        ((('col', 1043, 12),), (('a',),)),
     )
 
 
