@@ -53,7 +53,7 @@ sql = '''
 # Connection and querying is via a context manager
 with streampq_connect(connection_params) as query:
     for (columns, rows) in query(sql):
-        print(columns)  # Tuple of column names
+        print(columns)  # Tuple of (column name, type, type modifier) triples
         for row in rows:
             print(row)  # Tuple of row  values
 ```
@@ -83,9 +83,10 @@ sql = '''
 def query_chunked_dfs(query, sql, chunk_size):
 
     def _chunked_df(columns, rows):
+        column_names = tuple(columns[0] for column in columns)
         it = iter(rows)
         while True:
-            df = pd.DataFrame.from_records(itertools.islice(it, chunk_size), columns=columns)
+            df = pd.DataFrame.from_records(itertools.islice(it, chunk_size), columns=column_names)
             if len(df) == 0:
                 break
             yield df
