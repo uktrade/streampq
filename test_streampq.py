@@ -334,8 +334,18 @@ def test_syntax_error(params: Iterable[Tuple[str, str]]) -> None:
         SELECTa;
     '''
     with streampq_connect(params) as query:
-        with pytest.raises(QueryError, match='syntax error at or near "SELECTa"'):
+        with pytest.raises(QueryError, match='syntax error at or near "SELECTa"') as exc_info:
             next(iter(query(sql)))
+
+    error_fields = dict(exc_info.value.fields)
+    assert error_fields['severity'] == 'ERROR'
+    assert error_fields['severity_nonlocalized'] == 'ERROR'
+    assert error_fields['sqlstate'] == '42601'
+    assert error_fields['message_primary'] == 'syntax error at or near "SELECTa"'
+    assert error_fields['statement_position'] == '28'
+    assert error_fields['source_file'] is not None
+    assert error_fields['source_line'] is not None
+    assert error_fields['source_function'] is not None
 
 
 def test_missing_column(params: Iterable[Tuple[str, str]]) -> None:
@@ -348,8 +358,18 @@ def test_missing_column(params: Iterable[Tuple[str, str]]) -> None:
         _, rows = next(results)
         rows_it = iter(rows)
         next(rows_it)
-        with pytest.raises(QueryError, match='column "a" does not exist'):
+        with pytest.raises(QueryError, match='column "a" does not exist') as exc_info:
             next(rows_it)
+
+    error_fields = dict(exc_info.value.fields)
+    assert error_fields['severity'] == 'ERROR'
+    assert error_fields['severity_nonlocalized'] == 'ERROR'
+    assert error_fields['sqlstate'] == '42703'
+    assert error_fields['message_primary'] == 'column "a" does not exist'
+    assert error_fields['statement_position'] == '35'
+    assert error_fields['source_file'] is not None
+    assert error_fields['source_line'] is not None
+    assert error_fields['source_function'] is not None
 
 
 def test_large_query(params: Iterable[Tuple[str, str]]) -> None:

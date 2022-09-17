@@ -226,7 +226,11 @@ Exceptions derive from `streampq.StreamPQError`. If there is any more informatio
 
     - **QueryError**
 
-      An error occurred while attempting to run a query. Typically this is due to a syntax error or a missing column.
+      An error occurred while attempting to run a query. Typically this is due to a syntax error or a missing column. A QueryError has an extra attribute:
+
+      - **fields**
+
+        A tuple of (error field name, value) pairs with more detailed information on the error. The [libpq error field names](https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQRESULTERRORFIELD) are used, but in lowercase and without the `PG_DIAG_` prefix.
 
     - **CancelError**
 
