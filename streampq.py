@@ -133,10 +133,34 @@ def streampq_connect(
     PQerrorMessage = pq.PQerrorMessage
     PQerrorMessage.argtypes = (_c_void_p,)
     PQerrorMessage.restype = _c_char_p
+    PQresultErrorField = pq.PQresultErrorField
+    PQresultErrorField.argtypes = (_c_void_p, _c_int)
+    PQresultErrorField.restype = _c_char_p
 
     PGRES_COMMAND_OK = 1
     PGRES_TUPLES_OK = 2
     PGRES_SINGLE_TUPLE = 9
+    PG_DIAG_ERROR_FIELDS = (
+        ('severity', b'S'[0]),
+        ('severity_nonlocalized', b'V'[0]),
+        ('sqlstate', b'C'[0]),
+        ('message_primary', b'M'[0]),
+        ('message_detail', b'D'[0]),
+        ('message_hint', b'H'[0]),
+        ('statement_position', b'P'[0]),
+        ('internal_position', b'p'[0]),
+        ('internal_query', b'q'[0]),
+        ('context', b'W'[0]),
+        ('schema_name', b's'[0]),
+        ('table_name', b't'[0]),
+        ('column_name', b'c'[0]),
+        ('datatype_name', b'd'[0]),
+        ('constraint_name', b'n'[0]),
+        ('source_file', b'F'[0]),
+        ('source_line', b'L'[0]),
+        ('source_function', b'R'[0]),
+    )
+    print(PG_DIAG_ERROR_FIELDS)
 
     def as_null_terminated_array(strings):
         char_ps = _tuple(_c_char_p(str_encode(string, 'utf-8')) for string in strings) + (None,)
@@ -264,6 +288,10 @@ def streampq_connect(
             _array_encode(value, 0) if type(value) in array_types_set else \
             _value_encode(value)
 
+    def decode_bytes_if_not_none(value):
+        return \
+            value if value is None else \
+            bytes_decode(value, 'utf-8')
 
     def query(socket, conn, set_query_running, sql, literals, identifiers) -> Results:
         set_query_running(True)
@@ -310,7 +338,13 @@ def streampq_connect(
                             continue
 
                         if status != PGRES_SINGLE_TUPLE:
-                            raise QueryError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
+                            raise QueryError(
+                                message=bytes_decode(PQerrorMessage(conn), 'utf-8'),
+                                fields=tuple(
+                                    (field_name, decode_bytes_if_not_none(PQresultErrorField(result, field_id)))
+                                    for field_name, field_id in PG_DIAG_ERROR_FIELDS
+                                )
+                            )
 
                         if num_columns == 0:
                             num_columns = PQnfields(result)
@@ -705,7 +739,11 @@ class ConnectionError(StreamPQError):
 
 
 class QueryError(StreamPQError):
-    pass
+    fields: Tuple[Tuple[str, str], ...]
+
+    def __init__(self, message, fields=()):
+        super().__init__(message)
+        self.fields = fields
 
 
 class CancelError(StreamPQError):
