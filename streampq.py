@@ -12,8 +12,19 @@ from itertools import groupby
 from typing import Protocol, Callable, Iterator, Iterable, Tuple, List, Dict, Set, Any
 
 
+class Column(str):
+    type_id: int
+    type_modifier: int
+
+    def __new__(cls, column_name, type_id, type_modifier):
+        obj = super().__new__(cls, column_name)
+        obj.type_id = type_id
+        obj.type_modifier = type_modifier
+        return obj
+
+
 # A protocol is needed to use keyword arguments
-Results = Iterable[Tuple[Tuple[str,...], Iterable[Tuple[Any, ...]]]]
+Results = Iterable[Tuple[Tuple[Column,...], Iterable[Tuple[Any, ...]]]]
 class Query(Protocol):
     def __call__(self, sql: str, literals: Iterable[Tuple[str, Any]]=(), identifiers: Iterable[Tuple[str, Any]]=()) -> Results: ...
 
@@ -277,7 +288,7 @@ def streampq_connect(
             group_key = _object()
             result = _c_void_p(0)
             num_columns = 0
-            columns: Tuple[Tuple[str, int, int], ...] = ()
+            columns: Tuple[Column, ...] = ()
             column_decoders: Tuple[Callable[[str], Any], ...] = ()
             null_decoder = dict_get(decoders_dict, None, identity)
 
@@ -304,7 +315,7 @@ def streampq_connect(
                         if num_columns == 0:
                             num_columns = PQnfields(result)
                             columns = _tuple(
-                                (
+                                Column(
                                     bytes_decode(PQfname(result, i), 'utf-8'),
                                     PQftype(result, i),
                                     PQfmod(result, i),
@@ -312,7 +323,7 @@ def streampq_connect(
                                 for i in _range(0, num_columns)
                             )
                             column_decoders = _tuple(
-                                dict_get(decoders_dict, columns[i][1], identity)
+                                dict_get(decoders_dict, columns[i].type_id, identity)
                                 for i in _range(0, num_columns)
                             )
 
