@@ -53,7 +53,8 @@ sql = '''
 # Connection and querying is via a context manager
 with streampq_connect(connection_params) as query:
     for (columns, rows) in query(sql):
-        print(columns)  # Tuple of (column name, type, type modifier) triples
+        print(columns)  # Tuple of column names (see below)
+
         for row in rows:
             print(row)  # Tuple of row values
 ```
@@ -83,10 +84,9 @@ sql = '''
 def query_chunked_dfs(query, sql, chunk_size):
 
     def _chunked_df(columns, rows):
-        column_names = tuple(columns[0] for column in columns)
         it = iter(rows)
         while True:
-            df = pd.DataFrame.from_records(itertools.islice(it, chunk_size), columns=column_names)
+            df = pd.DataFrame.from_records(itertools.islice(it, chunk_size), columns=columns)
             if len(df) == 0:
                 break
             yield df
@@ -99,6 +99,20 @@ with streampq_connect(connection_params) as query:
         for df in chunked_dfs:
             print(df)
 ```
+
+### Column names
+
+Each column is an instance of streampq.Column, a subclass of str with two extra attributes:
+
+- **type_id**
+
+  The PostgresSQL type id of the column. For example 25 indicates `text`.
+
+- **type_modifier**
+
+  The PostgreSQL type modifier of the column. This is often -1 to indicate no modification.
+
+While it's not typical to subclass `str` in Python, it's much more frequent to only need the column name for query results than the PostgreSQL type ID and modifier.
 
 ### PostgreSQL types to Python type decoding
 
