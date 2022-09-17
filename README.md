@@ -106,13 +106,13 @@ Each column is an instance of streampq.Column, a subclass of str with two extra 
 
 - **type_id**
 
-  The PostgresSQL type id of the column. For example 25 indicates `text`.
+  The PostgresSQL type id of the column. For example 25 indicates text.
 
 - **type_modifier**
 
   The PostgreSQL type modifier of the column. This is often -1 to indicate no modification.
 
-While it's not typical to subclass `str` in Python, it's much more frequent to only need the column name for query results than the PostgreSQL type ID and modifier.
+While it's not typical to subclass str in Python, it's much more frequent to only need the column name for query results than the PostgreSQL type ID and modifier.
 
 ### PostgreSQL types to Python type decoding
 
