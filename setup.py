@@ -8,7 +8,7 @@ def long_description():
 
 setuptools.setup(
     name='streampq',
-    version='0.0.44',
+    version='0.0.45',
     author='Department for International Trade',
     author_email='sre@digital.trade.gov.uk',
     description='PostgreSQL adapter to stream results of multi-statement queries without a server-side cursor',
