@@ -175,7 +175,7 @@ def streampq_connect(
         try:
             conn = PQconnectdbParams(keywords, values, 0)
             if not conn:
-                raise ConnectionError()
+                raise ConnectionError('Unable to create connection object. Might be out of memory')
 
             status = PQstatus(conn)
             if status:
