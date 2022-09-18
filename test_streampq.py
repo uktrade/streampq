@@ -531,7 +531,7 @@ def test_series_pandas_chunked(params: Iterable[Tuple[str, str]]) -> None:
         def _chunked_df(columns: Tuple[str,...], rows: Iterable[Tuple[Any,...]]) -> Iterable[pd.DataFrame]:
             it = iter(rows)
             while True:
-                df = pd.DataFrame.from_records(itertools.islice(it, chunk_size), columns=columns)
+                df = pd.DataFrame(itertools.islice(it, chunk_size), columns=columns)
                 if len(df) == 0:
                     break
                 yield df

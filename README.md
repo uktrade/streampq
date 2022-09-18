@@ -114,7 +114,7 @@ def query_chunked_dfs(query, sql, chunk_size):
     def _chunked_df(columns, rows):
         it = iter(rows)
         while True:
-            df = pd.DataFrame.from_records(itertools.islice(it, chunk_size), columns=columns)
+            df = pd.DataFrame(itertools.islice(it, chunk_size), columns=columns)
             if len(df) == 0:
                 break
             yield df
