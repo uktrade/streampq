@@ -521,7 +521,7 @@ def test_series(params: Iterable[Tuple[str, str]]) -> None:
     assert count == 10000000
 
 
-def test_series_pandas(params: Iterable[Tuple[str, str]]) -> None:
+def test_series_pandas_chunked(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
         SELECT * FROM generate_series(1,1005);
     '''
@@ -546,6 +546,19 @@ def test_series_pandas(params: Iterable[Tuple[str, str]]) -> None:
                 lengths.append(len(chunk_df))
 
     assert lengths == [100] * 10 + [5]
+
+
+def test_series_pandas(params: Iterable[Tuple[str, str]]) -> None:
+    sql = '''
+        SELECT * FROM generate_series(1,1005);
+    '''
+
+    lengths = []
+    with streampq_connect(params) as query:
+        for columns, rows in query(sql):
+            lengths.append(len(pd.DataFrame(rows, columns=columns)))
+
+    assert lengths == [1005]
 
 
 def test_notice(params: Iterable[Tuple[str, str]]) -> None:

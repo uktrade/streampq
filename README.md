@@ -59,9 +59,37 @@ with streampq_connect(connection_params) as query:
             print(row)  # Tuple of row values
 ```
 
+### Single pandas dataframe of SQL query results
+
+You can create a Pandas dataframe of SQL query results. This loads all results into memory.
+
+```python
+import itertools
+import pandas as pd
+from streampq import streampq_connect
+
+connection_params = (
+    ('host', 'localhost'),
+    ('port', '5432'),
+    ('dbname', 'postgres'),
+    ('user', 'postgres'),
+    ('password', 'password'),
+)
+
+sql = '''
+    SELECT * FROM my_table;
+    SELECT * FROM my_other_table;
+'''
+
+with streampq_connect(connection_params) as query:
+    for columns, rows in query(sql):
+        df = pd.DataFrame(rows, columns=columns)
+        print(df)
+```
+
 ### Chunked Pandas dataframes of SQL query results
 
-You can create chunked Pandas dataframes of SQL query results, similar to the output of using the `chunksize` parameter of the Pandas `read_csv` function. This uses a helper function to do the chunking.
+For larger sets of results that don't fit into memory, you can create chunked Pandas dataframes of SQL query results, similar to the output of using the `chunksize` parameter of the Pandas `read_csv` function. This uses a helper function to do the chunking.
 
 ```python
 import itertools
