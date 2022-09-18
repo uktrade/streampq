@@ -16,7 +16,7 @@ from typing import Type, TypeVar, Optional, Iterable, Tuple, Any
 import pandas as pd
 import pytest
 
-from streampq import streampq_connect, Interval, Range, ConnectionError, QueryError, Query
+from streampq import streampq_connect, Interval, Range, StreamPQError, ConnectionError, QueryError, Query
 
 
 @pytest.fixture
@@ -683,8 +683,18 @@ def test_connection_malloc_failure(params: Iterable[Tuple[str, str]]) -> None:
 
 
 @pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Test for malloc failure is linux-specific')
-def test_status_malloc_failure(params: Iterable[Tuple[str, str]]) -> None:
+@pytest.mark.parametrize("fail_after", list(range(1, 32)))
+def test_malloc_failure(params: Iterable[Tuple[str, str]], fail_after) -> None:
+
+    sql = '''
+        SELECT * FROM generate_series(1,10);
+    '''
+
     with \
-            fail_malloc(5, b'libpq.so'), \
-            pytest.raises(ConnectionError, match='out of memory'):
-        streampq_connect(params).__enter__()
+            fail_malloc(fail_after, b'libpq.so'), \
+            pytest.raises(StreamPQError, match='memory|Memory'):
+
+        with streampq_connect(params) as query:
+            for cols, rows in query(sql):
+                for row in rows:
+                    pass
