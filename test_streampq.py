@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
+from ctypes import cdll
 import itertools
 from multiprocessing import Process, Event
 from multiprocessing.synchronize import Event as EventClass
@@ -661,3 +662,15 @@ def test_incomplete_iteration_different_query(params: Iterable[Tuple[str, str]])
 
         with pytest.raises(QueryError, match='another command is already in progress'):
             query(sql)
+
+@pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Test for malloc failure is linux-specific')
+def test_connection_malloc_failure(params: Iterable[Tuple[str, str]]) -> None:
+    cdll.LoadLibrary('./test_override_malloc.so').set_fail_in(0, b'libpq.so')
+    with pytest.raises(ConnectionError, match='Unable to create connection object. Might be out of memory'):
+        streampq_connect(params).__enter__()
+
+@pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Test for malloc failure is linux-specific')
+def test_status_malloc_failure(params: Iterable[Tuple[str, str]]) -> None:
+    cdll.LoadLibrary('./test_override_malloc.so').set_fail_in(5, b'libpq.so')
+    with pytest.raises(ConnectionError, match='out of memory'):
+        streampq_connect(params).__enter__()
