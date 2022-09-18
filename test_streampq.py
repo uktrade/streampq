@@ -683,7 +683,7 @@ def test_connection_malloc_failure(params: Iterable[Tuple[str, str]]) -> None:
 
 
 @pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Test for malloc failure is linux-specific')
-@pytest.mark.parametrize("fail_after", list(i for i in range(1, 39) if i not in (34,35)))
+@pytest.mark.parametrize("fail_after", list(i for i in range(1, 40)))
 def test_malloc_failure(params: Iterable[Tuple[str, str]], fail_after) -> None:
 
     sql = '''
@@ -696,9 +696,14 @@ def test_malloc_failure(params: Iterable[Tuple[str, str]], fail_after) -> None:
             for row in rows:
                 pass
 
-    with \
-            fail_malloc(fail_after, b'libpq.so'), \
-            pytest.raises(StreamPQError, match='memory|Memory|localhost'):  # Some memory issues are failure to resolve
-
+    # Mostly for test coverage reasons to make sure that all of `run` is run
+    if fail_after in (34, 35, 39):
         with streampq_connect(params) as query:
             run(query)
+    else:
+        with \
+                fail_malloc(fail_after, b'libpq.so'), \
+                pytest.raises(StreamPQError, match='memory|Memory|localhost'):  # Some memory issues are failure to resolve
+
+            with streampq_connect(params) as query:
+                run(query)
