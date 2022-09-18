@@ -691,11 +691,14 @@ def test_malloc_failure(params: Iterable[Tuple[str, str]], fail_after) -> None:
         SELECT * FROM generate_series(1,10);
     '''
 
+    def run(query):
+        for cols, rows in query(sql, identifiers=(('column', 'column'),), literals=(('value', 'value'),)):
+            for row in rows:
+                pass
+
     with \
             fail_malloc(fail_after, b'libpq.so'), \
             pytest.raises(StreamPQError, match='memory|Memory|localhost'):  # Some memory issues are failure to resolve
 
         with streampq_connect(params) as query:
-            for cols, rows in query(sql, identifiers=(('column', 'column'),), literals=(('value', 'value'),)):
-                for row in rows:
-                    pass
+            run(query)
