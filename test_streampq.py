@@ -550,15 +550,19 @@ def test_series_pandas_chunked(params: Iterable[Tuple[str, str]]) -> None:
 
 def test_series_pandas(params: Iterable[Tuple[str, str]]) -> None:
     sql = '''
-        SELECT * FROM generate_series(1,1005);
+        SELECT * FROM generate_series(1,1005) AS s(my_col);
     '''
 
     lengths = []
+    columns = []
     with streampq_connect(params) as query:
-        for columns, rows in query(sql):
-            lengths.append(len(pd.DataFrame(rows, columns=columns)))
+        for _columns, rows in query(sql):
+            df = pd.DataFrame(rows, columns=_columns)
+            lengths.append(len(df))
+            columns.append(df.columns)
 
     assert lengths == [1005]
+    assert columns == [['my_col']]
 
 
 def test_notice(params: Iterable[Tuple[str, str]]) -> None:
