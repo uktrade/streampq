@@ -160,7 +160,6 @@ def streampq_connect(
         ('source_line', b'L'[0]),
         ('source_function', b'R'[0]),
     )
-    print(PG_DIAG_ERROR_FIELDS)
 
     def as_null_terminated_array(strings):
         char_ps = _tuple(_c_char_p(str_encode(string, 'utf-8')) for string in strings) + (None,)
