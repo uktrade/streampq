@@ -665,7 +665,7 @@ def test_incomplete_iteration_different_query(params: Iterable[Tuple[str, str]])
 
 @pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Test for malloc failure is linux-specific')
 def test_connection_malloc_failure(params: Iterable[Tuple[str, str]]) -> None:
-    cdll.LoadLibrary('./test_override_malloc.so').set_fail_in(0, b'libpq.so')
+    cdll.LoadLibrary('./test_override_malloc.so').set_fail_in(0, b'PQconnectdbParams')
     with pytest.raises(ConnectionError, match='Unable to create connection object. Might be out of memory'):
         streampq_connect(params).__enter__()
 
