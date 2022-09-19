@@ -49,8 +49,6 @@ malloc(size_t size) {
         }
 
         initialising = 1;
-        void *a = malloc(5);
-        free(a);
         original_malloc = dlsym(RTLD_NEXT, "malloc");
         original_free = dlsym(RTLD_NEXT, "free");
         initialising = 0;
