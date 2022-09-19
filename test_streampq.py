@@ -708,3 +708,22 @@ def test_malloc_failure(params: Iterable[Tuple[str, str]], fail_after) -> None:
 
             with streampq_connect(params) as query:
                 run(query, sql, identifiers=(('column', 'column'),), literals=(('value', 'value'),))
+
+
+@pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Test for malloc failure is linux-specific')
+@pytest.mark.parametrize("fail_after", list(i for i in range(0, 40)))
+def test_malloc_failure_once_returning_results(params: Iterable[Tuple[str, str]], fail_after) -> None:
+
+    sql = '''
+        SELECT * FROM generate_series(1, 5);
+        SELECT repeat(a::text, 10000) FROM generate_series(1, 100000) AS t(a);
+    '''
+
+    with \
+            pytest.raises(StreamPQError, match='memory|Memory|localhost'), \
+            streampq_connect(params) as query:
+
+        for cols, rows in query(sql):
+            with fail_malloc(fail_after, b'libpq.so'):
+                for row in rows:
+                    pass
