@@ -682,6 +682,12 @@ def test_connection_malloc_failure(params: Iterable[Tuple[str, str]]) -> None:
         streampq_connect(params).__enter__()
 
 
+def run(query, sql, identifiers=(), literals=()):
+    for cols, rows in query(sql, identifiers=identifiers, literals=literals):
+        for row in rows:
+            pass
+
+
 @pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Test for malloc failure is linux-specific')
 @pytest.mark.parametrize("fail_after", list(i for i in range(1, 40)))
 def test_malloc_failure(params: Iterable[Tuple[str, str]], fail_after) -> None:
@@ -690,11 +696,6 @@ def test_malloc_failure(params: Iterable[Tuple[str, str]], fail_after) -> None:
         SELECT *, {value} AS {column} FROM generate_series(1,10);
         SELECT * FROM generate_series(1,10);
     '''
-
-    def run(query, sql, identifiers=(), literals=()):
-        for cols, rows in query(sql, identifiers=identifiers, literals=literals):
-            for row in rows:
-                pass
 
     # Mostly for test coverage reasons to make sure that all of `run` is run
     if fail_after in (34, 35, 39):
