@@ -70,12 +70,15 @@ def streampq_connect(
 
     identity = lambda v: v
 
-    PQconnectdbParams = pq.PQconnectdbParams
-    PQconnectdbParams.restype = _c_void_p
+    PQconnectStartParams = pq.PQconnectStartParams
+    PQconnectStartParams.restype = _c_void_p
+    PQconnectPoll = pq.PQconnectPoll
+    PQconnectPoll.argtypes = (_c_void_p,)
     PQsocket = pq.PQsocket
     PQsocket.argtypes = (_c_void_p,)
     PQsetnonblocking = pq.PQsetnonblocking
     PQsetnonblocking.argtypes = (_c_void_p, _c_int)
+
     PQflush = pq.PQflush
     PQflush.argtypes = (_c_void_p,)
     PQconsumeInput = pq.PQconsumeInput
@@ -84,8 +87,6 @@ def streampq_connect(
     PQisBusy.argtypes = (_c_void_p,)
     PQfinish = pq.PQfinish
     PQfinish.argtypes = (_c_void_p,)
-    PQstatus = pq.PQstatus
-    PQstatus.argtypes = (_c_void_p,)
 
     PQgetCancel = pq.PQgetCancel
     PQgetCancel.argtypes = (_c_void_p,)
@@ -137,6 +138,10 @@ def streampq_connect(
     PQresultErrorField.argtypes = (_c_void_p, _c_int)
     PQresultErrorField.restype = _c_char_p
 
+    PGRES_POLLING_READING = 1
+    PGRES_POLLING_WRITING = 2
+    PGRES_POLLING_OK = 3
+
     PGRES_COMMAND_OK = 1
     PGRES_TUPLES_OK = 2
     PGRES_SINGLE_TUPLE = 9
@@ -173,19 +178,36 @@ def streampq_connect(
     def get_conn():
         conn = _c_void_p(0)
         try:
-            conn = PQconnectdbParams(keywords, values, 0)
+            conn = PQconnectStartParams(keywords, values, 0)
             if not conn:
                 raise ConnectionError('Unable to create connection object. Might be out of memory')
 
-            status = PQstatus(conn)
-            if status:
+            socket = PQsocket(conn)
+            if socket == -1:
                 raise ConnectionError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
+
+            with get_blocker(socket, (EVENT_WRITE,)) as block:
+                block()
+
+            while True:
+                polling_status = PQconnectPoll(conn)
+                socket = PQsocket(conn)
+
+                if polling_status == PGRES_POLLING_WRITING:
+                    with get_blocker(socket, (EVENT_WRITE,)) as block:
+                        block()
+                elif polling_status == PGRES_POLLING_READING:
+                    with get_blocker(socket, (EVENT_READ,)) as block:
+                        block()
+                elif polling_status == PGRES_POLLING_OK:
+                    break
+                else:
+                    raise ConnectionError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
             ok = PQsetnonblocking(conn, 1)
             if ok != 0:
                 raise ConnectionError(bytes_decode(PQerrorMessage(conn), 'utf-8'))
 
-            socket = PQsocket(conn)
             yield socket, conn
         finally:
             PQfinish(conn)
