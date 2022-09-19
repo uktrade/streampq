@@ -677,7 +677,7 @@ def fail_malloc(fail_in, search_string):
 @pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Test for malloc failure is linux-specific')
 def test_connection_malloc_failure(params: Iterable[Tuple[str, str]]) -> None:
     with \
-            fail_malloc(0, b'PQconnectdbParams'), \
+            fail_malloc(0, b'PQconnectStartParams'), \
             pytest.raises(ConnectionError, match='Unable to create connection object. Might be out of memory'):
         streampq_connect(params).__enter__()
 
