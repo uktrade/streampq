@@ -243,16 +243,16 @@ def streampq_connect(
 
         def block():
             while True:
-                for _, mask in sel_select():
+                for _key, mask in sel_select():
                     for event in events:
-                        if event & mask:
+                        if _key == key and (event & mask):
                             return event
 
         to_register = 0
         for ev in events:
             to_register |= ev
 
-        sel_register(socket, to_register)
+        key = sel_register(socket, to_register)
         try:
             yield block
         finally:
