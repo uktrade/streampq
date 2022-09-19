@@ -8,7 +8,7 @@ Stream results of multi-statement PostgreSQL queries from Python without server-
 
 - Every effort is made to cancel queries on `KeyboardInterrupt`, `SystemExit`, or errors - the server doesn't continue needlessly using resources.
 
-Particularly useful when temporary tables are needed to store intermediate results in multi-statement SQL scripts, or when using a server-side cursor would make a query slower. Instead of server-side cursors [libpq's single-row mode](https://www.postgresql.org/docs/current/libpq-single-row-mode.html) is used instead.
+Particularly useful when temporary tables are needed to store intermediate results in multi-statement SQL scripts, or when using a server-side cursor would make a query slower. Instead of server-side cursors [libpq's single-row mode](https://www.postgresql.org/docs/current/libpq-single-row-mode.html) is used.
 
 
 ## Installation
