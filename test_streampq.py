@@ -711,7 +711,7 @@ def test_malloc_failure(params: Iterable[Tuple[str, str]], fail_after) -> None:
 
 
 @pytest.mark.skipif(not sys.platform.startswith('linux'), reason='Test for malloc failure is linux-specific')
-@pytest.mark.parametrize("fail_after", list(i for i in range(0, 40)))
+@pytest.mark.parametrize("fail_after", list(i for i in range(0, 15)))
 def test_malloc_failure_once_returning_results(params: Iterable[Tuple[str, str]], fail_after) -> None:
 
     sql = '''
